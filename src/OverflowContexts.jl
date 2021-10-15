@@ -1,29 +1,63 @@
 module OverflowContexts
 __precompile__(false)
 
-import Base: hash_64_64, hash_64_32, hash_32_32, hash_uint, hash_uint64, hash, indexed_iterate, add_int, sub_int, neg_int, mul_int
+import Base: hash_64_64, hash_64_32, hash_32_32, hash_uint, hash_uint64, hash, memhash, memhash_seed,
+    indexed_iterate, add_int, sub_int, neg_int, mul_int, max_values, bitcast
 import Base.Checked: SignedInt, UnsignedInt, BrokenSignedInt, BrokenUnsignedInt, BrokenSignedIntMul, BrokenUnsignedIntMul,
     checked_abs, add_with_overflow, checked_neg, checked_add, sub_with_overflow, throw_overflowerr_negation, mul_with_overflow
 
+import CheckedArithmetic: replace_op!
+
 export @checked, @unchecked
 
+"""
+    @checked
+
+Redirect all integer math to overflow-checked operators. Only works at top-level.
+"""
 macro checked()
     return quote
-        (Base.:-)(x::Base.BitInteger)                    = Base.Checked.checked_neg(x)
-        (Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_sub(x, y)
-        (Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_add(x, y)
-        (Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_mul(x, y)
+        Base.eval(:((Base.:-)(x::Base.BitInteger)                    = Base.Checked.checked_neg(x)))
+        Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_sub(x, y)))
+        Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_add(x, y)))
+        Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_mul(x, y)))
     end
 end
-    
+
+
+
+"""
+    @unchecked
+
+Restore all integer math to overflow-permissive operations. Only works at top-level.
+"""
 macro unchecked()
     return quote
-        (Base.:-)(x::Base.BitInteger)                    = Base.neg_int(x)
-        (Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.sub_int(x, y)
-        (Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.add_int(x, y)
-        (Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.mul_int(x, y)
+        Base.eval(:((Base.:-)(x::Base.BitInteger)                    = Base.neg_int(x)))
+        Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.sub_int(x, y)))
+        Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.add_int(x, y)))
+        Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.mul_int(x, y)))
     end
 end
+
+"""
+    @unchecked expr
+
+Perform all integer operations in `expr` using overflow-permissive arithmetic.
+"""
+macro unchecked(expr::Expr)
+    isa(expr, Expr) || return expr
+    expr = copy(expr)
+    return esc(replace_op!(expr, op_unchecked))
+end
+
+const op_unchecked = Dict(
+    Symbol("unary-") => :(Base.neg_int),
+    :+ => (Base.add_int),
+    :- => (Base.sub_int),
+    :* => (Base.mul_int)
+)
+
 
 # fix base methods that require overflow/underflow
 hash(@nospecialize(x), h::UInt) = hash_uint(sub_int(mul_int(UInt(3), h), objectid(x)))
@@ -62,8 +96,8 @@ function hash_32_32(n::UInt32)
     return a
 end
 
-hash(x::Int64,  h::UInt) = sub_int(hash_uint64(bitcast(UInt64, x)), mul_int(3, h))
-hash(x::UInt64, h::UInt) = sub_int(hash_uint64(x), mul_int(3, h))
+hash(x::Int64,  h::UInt) = sub_int(hash_uint64(bitcast(UInt64, x)), mul_int(UInt(3), h))
+hash(x::UInt64, h::UInt) = sub_int(hash_uint64(x), mul_int(UInt(3), h))
 
 if UInt === UInt64
     hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, add_int(h, 0x83c7900696d26dc6)))
@@ -73,8 +107,26 @@ else
     hash(x::QuoteNode, h::UInt) = hash(x.value, add_int(h, 0x469d72af))
 end
 
+function hash(s::String, h::UInt)
+    h += memhash_seed
+    add_int(ccall(memhash, UInt, (Ptr{UInt8}, Csize_t, UInt32), s, sizeof(s), h % UInt32), h)
+end
+
+
+
 @inline indexed_iterate(t::Tuple, i::Int, state=1) = (getfield(t, i), add_int(i, 1))
 @inline indexed_iterate(a::Array, i::Int, state=1) = (a[i], add_int(i, 1))
+
+
+
+function max_values(T::Union)
+    a = max_values(T.a)::Int
+    b = max_values(T.b)::Int
+    return max(a, b, add_int(a, b))
+end
+
+
+
 
 # Base.Checked
 if BrokenSignedInt != Union{}
@@ -154,11 +206,6 @@ function mul_with_overflow(x::T, y::T) where T<:UInt128
     # x * y > typemax(T)
     mul_int(x, y), y > 0 && x > fld(typemax(T), y)
 end
-end
-
-function hash(s::String, h::UInt)
-    h += memhash_seed
-    add_int(ccall(memhash, UInt, (Ptr{UInt8}, Csize_t, UInt32), s, sizeof(s), h % UInt32), h)
 end
 
 end # module
