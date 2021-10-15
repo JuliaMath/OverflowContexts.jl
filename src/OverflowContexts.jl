@@ -72,7 +72,7 @@ end
 
 
 # fix base methods that require overflow/underflow
-@unchecked hash(@nospecialize(x), h::UInt) = hash_uint(3h - objectid(x)
+@unchecked hash(@nospecialize(x), h::UInt) = hash_uint(3h - objectid(x))
 
 @unchecked function hash_64_64(n::UInt64)
     a::UInt64 = n
