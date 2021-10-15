@@ -8,7 +8,7 @@ import Base.Checked: SignedInt, UnsignedInt, BrokenSignedInt, BrokenUnsignedInt,
 
 import CheckedArithmetic: replace_op!
 
-export @checked, @unchecked
+export @checked, @unchecked, unchecked_add, unchecked_sub, unchecked_mul
 
 """
     @checked
@@ -23,8 +23,6 @@ macro checked()
         Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_mul(x, y)))
     end
 end
-
-
 
 """
     @unchecked
@@ -53,76 +51,89 @@ end
 
 const op_unchecked = Dict(
     Symbol("unary-") => :(Base.neg_int),
-    :+ => (Base.add_int),
-    :- => (Base.sub_int),
-    :* => (Base.mul_int)
+    :+ => :(unchecked_add),
+    :- => :(unchecked_sub),
+    :* => :(unchecked_mul)
 )
+
+unchecked_add(x::Integer, y::Integer) = unchecked_add(promote(x,y)...)
+unchecked_sub(x::Integer, y::Integer) = unchecked_sub(promote(x,y)...)
+unchecked_mul(x::Integer, y::Integer) = unchecked_mul(promote(x,y)...)
+
+unchecked_add(x::T, y::T) where T <: Integer = Base.add_int(x, y)
+unchecked_sub(x::T, y::T) where T <: Integer = Base.sub_int(x, y)
+unchecked_mul(x::T, y::T) where T <: Integer = Base.mul_int(x, y)
+
+for op in (:unchecked_add, :unchecked_mul)
+    @eval begin
+        ($op)(a, b, c, xs...) = Base.afoldl($op, ($op)(($op)(a,b),c), xs...)
+    end
+end
 
 
 # fix base methods that require overflow/underflow
-hash(@nospecialize(x), h::UInt) = hash_uint(sub_int(mul_int(UInt(3), h), objectid(x)))
+@unchecked hash(@nospecialize(x), h::UInt) = hash_uint(3h - objectid(x)
 
-function hash_64_64(n::UInt64)
+@unchecked function hash_64_64(n::UInt64)
     a::UInt64 = n
-    a = add_int(~a, a << 21)
+    a = ~a + a << 21
     a =  a ⊻ a >> 24
-    a =  add_int(add_int(a, a << 3), a << 8)
+    a =  a + a << 3 + a << 8
     a =  a ⊻ a >> 14
-    a =  add_int(add_int(a, a << 2), a << 4)
+    a =  a + a << 2 + a << 4
     a =  a ⊻ a >> 28
-    a =  add_int(a, a << 31)
+    a =  a + a << 31
     return a
 end
 
-function hash_64_32(n::UInt64)
+@unchecked function hash_64_32(n::UInt64)
     a::UInt64 = n
-    a = add_int(~a, a << 18)
+    a = ~a + a << 18
     a =  a ⊻ a >> 31
     a =  a * 21
     a =  a ⊻ a >> 11
-    a =  add_int(a, a << 6)
+    a =  a + a << 6
     a =  a ⊻ a >> 22
     return a % UInt32
 end
 
-function hash_32_32(n::UInt32)
+@unchecked function hash_32_32(n::UInt32)
     a::UInt32 = n
-    a = add_int(add_int(a, 0x7ed55d16), a << 12)
+    a = a + 0x7ed55d16 + a << 12
     a = a ⊻ 0xc761c23c ⊻ a >> 19
-    a = add_int(add_int(a, 0x165667b1), a << 5)
-    a = add_int(a, 0xd3a2646c) ⊻ a << 9
-    a = add_int(add_int(a, 0xfd7046c5), a << 3)
+    a = a + 0x165667b1 + a << 5
+    a = a + 0xd3a2646c ⊻ a << 9
+    a = a + 0xfd7046c5 + a << 3
     a = a ⊻ 0xb55a4f09 ⊻ a >> 16
     return a
 end
 
-hash(x::Int64,  h::UInt) = sub_int(hash_uint64(bitcast(UInt64, x)), mul_int(UInt(3), h))
-hash(x::UInt64, h::UInt) = sub_int(hash_uint64(x), mul_int(UInt(3), h))
+@unchecked hash(x::Int64,  h::UInt) = hash_uint64(bitcast(UInt64, x)) - 3h
+@unchecked hash(x::UInt64, h::UInt) = hash_uint64(x) - 3h
 
 if UInt === UInt64
-    hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, add_int(h, 0x83c7900696d26dc6)))
-    hash(x::QuoteNode, h::UInt) = hash(x.value, add_int(h, 0x2c97bf8b3de87020))
+    @unchecked hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, h + 0x83c7900696d26dc6))
+    @unchecked hash(x::QuoteNode, h::UInt) = hash(x.value, h + 0x2c97bf8b3de87020)
 else
-    hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, add_int(h, 0x96d26dc6)))
-    hash(x::QuoteNode, h::UInt) = hash(x.value, add_int(h, 0x469d72af))
+    @unchecked hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, h + 0x96d26dc6))
+    @unchecked hash(x::QuoteNode, h::UInt) = hash(x.value, h + 0x469d72af)
 end
 
-function hash(s::String, h::UInt)
+@unchecked function hash(s::String, h::UInt)
     h += memhash_seed
-    add_int(ccall(memhash, UInt, (Ptr{UInt8}, Csize_t, UInt32), s, sizeof(s), h % UInt32), h)
+    ccall(memhash, UInt, (Ptr{UInt8}, Csize_t, UInt32), s, sizeof(s), h % UInt32) + h
 end
 
 
-
-@inline indexed_iterate(t::Tuple, i::Int, state=1) = (getfield(t, i), add_int(i, 1))
-@inline indexed_iterate(a::Array, i::Int, state=1) = (a[i], add_int(i, 1))
-
+@inline @unchecked indexed_iterate(t::Tuple, i::Int, state=1) = (getfield(t, i), i + 1)
+@inline @unchecked indexed_iterate(a::Array, i::Int, state=1) = (a[i], i + 1)
 
 
-function max_values(T::Union)
+
+@unchecked function max_values(T::Union)
     a = max_values(T.a)::Int
     b = max_values(T.b)::Int
-    return max(a, b, add_int(a, b))
+    return max(a, b, a + b)
 end
 
 
@@ -130,61 +141,61 @@ end
 
 # Base.Checked
 if BrokenSignedInt != Union{}
-function checked_neg(x::BrokenSignedInt)
-    r = neg_int(x)
+@unchecked function checked_neg(x::BrokenSignedInt)
+    r = -x
     (x<0) & (r<0) && throw_overflowerr_negation(x)
     r
 end
 end
 
-@inline function checked_abs(x::SignedInt)
-    r = ifelse(x<0, neg_int(x), x)
+@inline @unchecked function checked_abs(x::SignedInt)
+    r = ifelse(x<0, -x, x)
     r<0 && throw(OverflowError(string("checked arithmetic: cannot compute |x| for x = ", x, "::", typeof(x))))
     r
  end
 
-add_with_overflow(x::Bool, y::Bool) = (add_int(x, y), false)
+ @unchecked add_with_overflow(x::Bool, y::Bool) = (x + y, false)
 
 if BrokenSignedInt != Union{}
-function add_with_overflow(x::T, y::T) where T<:BrokenSignedInt
-    r = add_int(x, y)
+@unchecked function add_with_overflow(x::T, y::T) where T<:BrokenSignedInt
+    r = x + y
     # x and y have the same sign, and the result has a different sign
     f = (x<0) == (y<0) != (r<0)
     r, f
 end
 end
 if BrokenUnsignedInt != Union{}
-function add_with_overflow(x::T, y::T) where T<:BrokenUnsignedInt
+@unchecked function add_with_overflow(x::T, y::T) where T<:BrokenUnsignedInt
     # x + y > typemax(T)
     # Note: ~y == -y-1
-    add_int(x, y), x > ~y
+    x + y, x > ~y
 end
 end
 
 checked_add(x::Bool) = Int(x)
 
-sub_with_overflow(x::Bool, y::Bool) = (sub_int(x, y), false)
+@unchecked sub_with_overflow(x::Bool, y::Bool) = (x - y, false)
 
 if BrokenSignedInt != Union{}
-function sub_with_overflow(x::T, y::T) where T<:BrokenSignedInt
-    r = sub_int(x, y)
+@unchecked function sub_with_overflow(x::T, y::T) where T<:BrokenSignedInt
+    r = x - y
     # x and y have different signs, and the result has a different sign than x
     f = (x<0) != (y<0) == (r<0)
     r, f
 end
 end
 if BrokenUnsignedInt != Union{}
-function sub_with_overflow(x::T, y::T) where T<:BrokenUnsignedInt
+@unchecked function sub_with_overflow(x::T, y::T) where T<:BrokenUnsignedInt
     # x - y < 0
-    sub_int(x, y), x < y
+    x - y, x < y
 end
 end
 
-mul_with_overflow(x::Bool, y::Bool) = (mul_int(x, y), false)
+@unchecked mul_with_overflow(x::Bool, y::Bool) = (x * y, false)
 
 if Int128 <: BrokenSignedIntMul
 # Avoid BigInt
-function mul_with_overflow(x::T, y::T) where T<:Int128
+@unchecked function mul_with_overflow(x::T, y::T) where T<:Int128
     f = if y > 0
         # x * y > typemax(T)
         # x * y < typemin(T)
@@ -197,14 +208,14 @@ function mul_with_overflow(x::T, y::T) where T<:Int128
     else
         false
     end
-    mul_int(x, y), f
+    x * y, f
 end
 end
 if UInt128 <: BrokenUnsignedIntMul
 # Avoid BigInt
-function mul_with_overflow(x::T, y::T) where T<:UInt128
+@unchecked function mul_with_overflow(x::T, y::T) where T<:UInt128
     # x * y > typemax(T)
-    mul_int(x, y), y > 0 && x > fld(typemax(T), y)
+    x * y, y > 0 && x > fld(typemax(T), y)
 end
 end
 
