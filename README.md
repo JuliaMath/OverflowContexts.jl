@@ -23,6 +23,10 @@ you may need to provide your own patch locally. Unless it is a commonly used pac
 Ideally, if this model were to be adopted by Julia itself, such packages could be updated to include functions annotated with `@unchecked` for compatibility
 with the default set to do overflow checking.
 
+If you're authoring a package, don't place code under `@unchecked` just to guarantee higher performance in case the user wishes to run in a `@default_checked`
+context. Instead, use it only to guarantee the *correctness* of code that depends on unchecked arithmetic, or to make an exception to your own local
+`@checked` contexts.
+
 ```julia
 using OverflowContexts
 x = typemax(Int) # 9223372036854775807
