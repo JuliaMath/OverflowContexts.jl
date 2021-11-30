@@ -4,7 +4,7 @@ import Base.Meta: isexpr
 import CheckedArithmetic: replace_op!, @checked
 
 """
-@default_checked
+    @default_checked
 
 Redirect default integer math to overflow-checked operators. Only works at top-level.
 """
@@ -18,7 +18,7 @@ end
 end
 
 """
-@default_unchecked
+    @default_unchecked
 
 Restore default integer math to overflow-permissive operations. Only works at top-level.
 """
@@ -32,7 +32,7 @@ end
 end
 
 """
-@unchecked expr
+    @unchecked expr
 
 Perform all integer operations in `expr` using overflow-permissive arithmetic.
 """
