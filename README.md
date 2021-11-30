@@ -23,7 +23,7 @@ you may need to provide your own patch locally. Unless it is a commonly used pac
 Ideally, if this model were to be adopted by Julia itself, such packages could be updated to include functions annotated with `@unchecked` for compatibility
 with the default set to do overflow checking.
 
-```
+```julia
 using OverflowContexts
 x = typemax(Int) # 9223372036854775807
 x + 1 # -9223372036854775808
