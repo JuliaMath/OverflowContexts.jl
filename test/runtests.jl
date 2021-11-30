@@ -29,3 +29,17 @@ d() = x + 1; c() = d(); b() = c(); a() = b();
 @default_unchecked
 
 @test a() == typemin(Int)
+
+# Doesn't disrupt non-integer math
+@test @checked 1.0 + 3.0 == 4.0
+@test @unchecked 1.0 + 3.0 == 4.0
+@test @checked 1 + 3.0 == 4.0
+@test @unchecked 1 + 3.0 == 4.0
+@test @checked 1.0 - 3.0 == -2.0
+@test @unchecked 1.0 - 3.0 == -2.0
+@test @checked 1 - 3.0 == -2.0
+@test @unchecked 1 - 3.0 == -2.0
+@test @checked 1.0 * 3.0 == 3.0
+@test @unchecked 1.0 * 3.0 == 3.0
+@test @checked 1 * 3.0 == 3.0
+@test @unchecked 1 * 3.0 == 3.0

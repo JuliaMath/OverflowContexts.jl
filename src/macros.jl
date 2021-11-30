@@ -1,3 +1,4 @@
+import Base.Checked: checked_add, checked_sub, checked_mul
 import Base.Meta: isexpr
 
 import CheckedArithmetic: replace_op!, @checked
@@ -86,3 +87,11 @@ function replace_op!(expr::Expr, op_map::Dict)
     end
     return expr
 end
+
+# passthrough for non-integer math
+checked_add(x::T, y::S) where {T <: Number, S <: Number} = x + y
+checked_sub(x::T, y::S) where {T <: Number, S <: Number} = x - y
+checked_mul(x::T, y::S) where {T <: Number, S <: Number} = x * y
+unchecked_add(x::T, y::S) where {T <: Number, S <: Number} = x + y
+unchecked_sub(x::T, y::S) where {T <: Number, S <: Number} = x - y
+unchecked_mul(x::T, y::S) where {T <: Number, S <: Number} = x * y
