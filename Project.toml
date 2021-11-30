@@ -8,6 +8,7 @@ CheckedArithmetic = "2c4a1fb8-30c1-4c71-8b84-dff8d59868ee"
 
 [compat]
 julia = "1.6"
+CheckedArithmetic = "0.2.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
