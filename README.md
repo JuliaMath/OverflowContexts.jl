@@ -18,7 +18,7 @@ and thus are not affected by switching the default.
 **NOTE:** If you set `@default_checked`, some operations that expect the Julia default of unchecked arithmetic may not work. Particularly hash functions.
 I've included here a number of such core Julia functions and applied the `@unchecked` macro to them so that they still work. If you encouter an error in
 Julia running in a checked context, please report it as an Issue to this repository so the function can be included here. If the error is in a package,
-you may need to provide your own patch locally. Unless it is a commonly used package, in which case I can have a conditionally load it here.
+you may need to provide your own patch locally. Unless it is a commonly used package, in which case I can conditionally load it here.
 
 Ideally, if this model were to be adopted by Julia itself, such packages could be updated to include functions annotated with `@unchecked` for compatibility
 with the default set to do overflow checking.
