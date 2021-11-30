@@ -34,7 +34,7 @@ x + 1 # ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64
 @unchecked x * 2 # -2
 
 @unchecked begin
-    x * 2
+    x * 2 # -2
     @checked x + 1 # ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64
 end
 
