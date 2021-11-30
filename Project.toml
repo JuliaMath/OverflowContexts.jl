@@ -5,3 +5,12 @@ version = "0.1.0"
 
 [deps]
 CheckedArithmetic = "2c4a1fb8-30c1-4c71-8b84-dff8d59868ee"
+
+[compat]
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
