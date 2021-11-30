@@ -1,3 +1,4 @@
+import Base.literal_pow
 import Base.Checked: checked_add, checked_sub, checked_mul
 import Base.Meta: isexpr
 
@@ -14,8 +15,11 @@ return quote
     Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_sub(x, y)))
     Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_add(x, y)))
     Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_mul(x, y)))
+    Base.eval(:((Base.abs)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_abs(x, y)))
 end
 end
+
+abs(x::Signed) = flipsign(x,x)
 
 """
     @default_unchecked
@@ -28,6 +32,7 @@ return quote
     Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.sub_int(x, y)))
     Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.add_int(x, y)))
     Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.mul_int(x, y)))
+    Base.eval(:((Base.abs)(x::T, y::T) where {T<:Base.BitInteger} = Base.flipsign(x, x)))
 end
 end
 
@@ -47,6 +52,7 @@ const op_unchecked = Dict(
     :+ => :(unchecked_add),
     :- => :(unchecked_sub),
     :* => :(unchecked_mul),
+    :abs => :(unchecked_abs)
 )
 
 # copied from CheckedArithmetic.jl and modified so that it doesn't traverse internal @checked/@unchecked blocks
@@ -87,11 +93,3 @@ function replace_op!(expr::Expr, op_map::Dict)
     end
     return expr
 end
-
-# passthrough for non-integer math
-checked_add(x::T, y::S) where {T <: Number, S <: Number} = x + y
-checked_sub(x::T, y::S) where {T <: Number, S <: Number} = x - y
-checked_mul(x::T, y::S) where {T <: Number, S <: Number} = x * y
-unchecked_add(x::T, y::S) where {T <: Number, S <: Number} = x + y
-unchecked_sub(x::T, y::S) where {T <: Number, S <: Number} = x - y
-unchecked_mul(x::T, y::S) where {T <: Number, S <: Number} = x * y

@@ -1,5 +1,5 @@
 import Base: hash_64_64, hash_64_32, hash_32_32, hash_uint, hash_uint64, hash, memhash, memhash_seed,
-    indexed_iterate, max_values, bitcast, tuplehash_seed, match, compile, PCRE, Any32
+    indexed_iterate, max_values, bitcast, tuplehash_seed, match, compile, PCRE, unitrange_last
 import Base.PCRE: exec_r_data, free_match_data, ovec_length, ovec_ptr
 
 # fix base methods that require overflow/underflow
@@ -89,7 +89,7 @@ end
 @unchecked hash(::Tuple{}, h::UInt) = h + tuplehash_seed
 
 if VERSION ≥ v"1.7"
-@unchecked function hash(t::Any32, h::UInt)
+@unchecked function hash(t::Base.Any32, h::UInt)
     out = h + tuplehash_seed
     for i = length(t):-1:1
         out = hash(t[i], out)
@@ -97,3 +97,10 @@ if VERSION ≥ v"1.7"
     return out
 end
 end
+
+#range.jl
+@unchecked unitrange_last(start::T, stop::T) where {T<:Integer} =
+    stop >= start ? stop : convert(T,start-oneunit(start-stop))
+@unchecked unitrange_last(start::T, stop::T) where {T} =
+    stop >= start ? convert(T,start+floor(stop-start)) :
+                    convert(T,start-oneunit(stop-start))

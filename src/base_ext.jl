@@ -4,13 +4,24 @@ import Base.Checked: SignedInt, UnsignedInt, BrokenSignedInt, BrokenUnsignedInt,
 # extended base functions to support switching between checked and unchecked
 
 unchecked_add(x::Integer, y::Integer) = unchecked_add(promote(x,y)...)
-
 unchecked_sub(x::Integer, y::Integer) = unchecked_sub(promote(x,y)...)
 unchecked_mul(x::Integer, y::Integer) = unchecked_mul(promote(x,y)...)
 
 unchecked_add(x::T, y::T) where T <: Integer = Base.add_int(x, y)
 unchecked_sub(x::T, y::T) where T <: Integer = Base.sub_int(x, y)
 unchecked_mul(x::T, y::T) where T <: Integer = Base.mul_int(x, y)
+unchecked_abs(x::T) where T <: Signed = Base.flipsign_int(x, x)
+
+# passthrough for non-integer math
+checked_add(x::T, y::S) where {T <: Number, S <: Number} = x + y
+checked_sub(x::T, y::S) where {T <: Number, S <: Number} = x - y
+checked_mul(x::T, y::S) where {T <: Number, S <: Number} = x * y
+checked_abs(x::T) where {T <: Number} = abs(x)
+unchecked_add(x::T, y::S) where {T <: Number, S <: Number} = x + y
+unchecked_sub(x::T, y::S) where {T <: Number, S <: Number} = x - y
+unchecked_mul(x::T, y::S) where {T <: Number, S <: Number} = x * y
+unchecked_abs(x::T) where {T <: Number} = abs(x)
+
 
 for op in (:unchecked_add, :unchecked_mul)
     @eval begin
