@@ -15,7 +15,7 @@ return quote
     Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_sub(x, y)))
     Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_add(x, y)))
     Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_mul(x, y)))
-    Base.eval(:((Base.abs)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_abs(x, y)))
+    Base.eval(:((Base.abs)(x::T) where {T<:Base.BitInteger} = Base.Checked.checked_abs(x)))
 end
 end
 
@@ -32,7 +32,7 @@ return quote
     Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.sub_int(x, y)))
     Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.add_int(x, y)))
     Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.mul_int(x, y)))
-    Base.eval(:((Base.abs)(x::T, y::T) where {T<:Base.BitInteger} = Base.flipsign(x, x)))
+    Base.eval(:((Base.abs)(x::T) where {T<:Base.BitInteger} = Base.flipsign(x, x)))
 end
 end
 
