@@ -1,8 +1,4 @@
-import Base.literal_pow
-import Base.Checked: checked_add, checked_sub, checked_mul
 import Base.Meta: isexpr
-
-import CheckedArithmetic: replace_op!, @checked
 
 """
     @default_checked
@@ -11,15 +7,11 @@ Redirect default integer math to overflow-checked operators. Only works at top-l
 """
 macro default_checked()
 return quote
-    Base.eval(:((Base.:-)(x::Base.BitInteger)                    = Base.Checked.checked_neg(x)))
-    Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_sub(x, y)))
-    Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_add(x, y)))
-    Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.Checked.checked_mul(x, y)))
-    Base.eval(:((Base.abs)(x::T) where {T<:Base.BitInteger} = Base.Checked.checked_abs(x)))
+    Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Main.checked_add(x, y)))
+    Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Main.checked_sub(x, y)))
+    Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Main.checked_mul(x, y)))
 end
 end
-
-abs(x::Signed) = flipsign(x,x)
 
 """
     @default_unchecked
@@ -28,11 +20,9 @@ Restore default integer math to overflow-permissive operations. Only works at to
 """
 macro default_unchecked()
 return quote
-    Base.eval(:((Base.:-)(x::Base.BitInteger)                    = Base.neg_int(x)))
-    Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Base.sub_int(x, y)))
-    Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Base.add_int(x, y)))
-    Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Base.mul_int(x, y)))
-    Base.eval(:((Base.abs)(x::T) where {T<:Base.BitInteger} = Base.flipsign(x, x)))
+    Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Main.unchecked_add(x, y)))
+    Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Main.unchecked_sub(x, y)))
+    Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Main.unchecked_mul(x, y)))
 end
 end
 
@@ -47,12 +37,31 @@ macro unchecked(expr::Expr)
     return esc(replace_op!(expr, op_unchecked))
 end
 
+"""
+    @checked expr
+
+Perform all integer operations in `expr` using overflow-permissive arithmetic.
+"""
+macro checked(expr::Expr)
+    isa(expr, Expr) || return expr
+    expr = copy(expr)
+    return esc(replace_op!(expr, op_checked))
+end
+
+const op_checked = Dict(
+    # Symbol("unary-") => :(Base.neg_int),
+    :+ => :(checked_add),
+    :- => :(checked_sub),
+    :* => :(checked_mul),
+    # :abs => :(unchecked_abs)
+)
+
 const op_unchecked = Dict(
-    Symbol("unary-") => :(Base.neg_int),
+    # Symbol("unary-") => :(Base.neg_int),
     :+ => :(unchecked_add),
     :- => :(unchecked_sub),
     :* => :(unchecked_mul),
-    :abs => :(unchecked_abs)
+    # :abs => :(unchecked_abs)
 )
 
 # copied from CheckedArithmetic.jl and modified so that it doesn't traverse internal @checked/@unchecked blocks

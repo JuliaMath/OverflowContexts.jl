@@ -3,7 +3,7 @@ import Base: hash_64_64, hash_64_32, hash_32_32, hash_uint, hash_uint64, hash, m
 import Base.PCRE: exec_r_data, free_match_data, ovec_length, ovec_ptr
 
 # fix base methods that require overflow/underflow
-@unchecked hash(@nospecialize(x), h::UInt) = hash_uint(3h - objectid(x))
+hash(@nospecialize(x), h::UInt) = hash_uint(@unchecked 3h - objectid(x))
 
 @unchecked function hash_64_64(n::UInt64)
     a::UInt64 = n
@@ -39,15 +39,15 @@ end
     return a
 end
 
-@unchecked hash(x::Int64,  h::UInt) = hash_uint64(bitcast(UInt64, x)) - 3h
-@unchecked hash(x::UInt64, h::UInt) = hash_uint64(x) - 3h
+hash(x::Int64,  h::UInt) = @unchecked hash_uint64(bitcast(UInt64, x)) - 3h
+hash(x::UInt64, h::UInt) = @unchecked hash_uint64(x) - 3h
 
 if UInt === UInt64
-    @unchecked hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, h + 0x83c7900696d26dc6))
-    @unchecked hash(x::QuoteNode, h::UInt) = hash(x.value, h + 0x2c97bf8b3de87020)
+    hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, @unchecked h + 0x83c7900696d26dc6))
+    hash(x::QuoteNode, h::UInt) = hash(x.value, @unchecked h + 0x2c97bf8b3de87020)
 else
-    @unchecked hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, h + 0x96d26dc6))
-    @unchecked hash(x::QuoteNode, h::UInt) = hash(x.value, h + 0x469d72af)
+    hash(x::Expr, h::UInt) = hash(x.args, hash(x.head, @unchecked h + 0x96d26dc6))
+    hash(x::QuoteNode, h::UInt) = hash(x.value, @unchecked h + 0x469d72af)
 end
 
 @unchecked function hash(s::String, h::UInt)
@@ -86,11 +86,11 @@ end
 end
 
 # tuple.jl
-@unchecked hash(::Tuple{}, h::UInt) = h + tuplehash_seed
+hash(::Tuple{}, h::UInt) = @unchecked h + tuplehash_seed
 
 if VERSION ≥ v"1.7"
-@unchecked function hash(t::Base.Any32, h::UInt)
-    out = h + tuplehash_seed
+function hash(t::Base.Any32, h::UInt)
+    out = @unchecked h + tuplehash_seed
     for i = length(t):-1:1
         out = hash(t[i], out)
     end
