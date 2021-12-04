@@ -12,8 +12,7 @@ for the `+`, `-`, and `*` operators, and `abs` function, are being redirected. A
 incorporate the new method definitions. Some methods may not be recompiled, and may not adopt the new methods. This may also cause a long delay when running
 code the first time after these are set. Thus, I recommended that you only rarely change the default context.
 
-The expression-level `@checked` and `@unchecked` work by rewriting the `+`, `-`, and `*` operators to methods specific to the checked or permissive operation,
-and thus are not affected by switching the default.
+The expression-level `@checked` and `@unchecked` work by rewriting the `+`, `-`, and `*` operators, and `abs` function, to methods specific to the checked or permissive operation, and thus are not affected by switching the default.
 
 **NOTE:** If you set `@default_checked`, some operations that expect the Julia default of unchecked arithmetic may not work. Particularly hash functions.
 I've included here a number of such core Julia functions and applied the `@unchecked` macro to them so that they still work. If you encouter an error in
