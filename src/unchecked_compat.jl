@@ -55,8 +55,8 @@ end
     ccall(memhash, UInt, (Ptr{UInt8}, Csize_t, UInt32), s, sizeof(s), h % UInt32) + h
 end
 
-@inline @unchecked indexed_iterate(t::Tuple, i::Int, state=1) = (getfield(t, i), i + 1)
-@inline @unchecked indexed_iterate(a::Array, i::Int, state=1) = (a[i], i + 1)
+@inline indexed_iterate(t::Tuple, i::Int, state=1) = (getfield(t, i), @unchecked i + 1)
+@inline indexed_iterate(a::Array, i::Int, state=1) = (a[i], @unchecked i + 1)
 
 @unchecked function max_values(T::Union)
     a = max_values(T.a)::Int

@@ -12,6 +12,7 @@ function __init__()
 end
 
 export @default_checked, @default_unchecked, @checked, @unchecked,
-    unchecked_add, unchecked_sub, unchecked_mul, checked_add, checked_sub, checked_mul#, unchecked_abs
+    unchecked_neg, unchecked_add, unchecked_sub, unchecked_mul, unchecked_negsub,
+    checked_neg, checked_add, checked_sub, checked_mul, checked_negsub#, unchecked_abs
 
 end # module

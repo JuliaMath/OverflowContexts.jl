@@ -7,9 +7,10 @@ Redirect default integer math to overflow-checked operators. Only works at top-l
 """
 macro default_checked()
 return quote
-    Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Main.checked_add(x, y)))
-    Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Main.checked_sub(x, y)))
-    Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Main.checked_mul(x, y)))
+    Base.eval(:((Base.:-)(x::T) where T <: Base.BitInteger = Main.checked_neg(x)))
+    Base.eval(:((Base.:+)(x::T, y::T) where T <: Base.BitInteger = Main.checked_add(x, y)))
+    Base.eval(:((Base.:-)(x::T, y::T) where T <: Base.BitInteger = Main.checked_sub(x, y)))
+    Base.eval(:((Base.:*)(x::T, y::T) where T <: Base.BitInteger = Main.checked_mul(x, y)))
 end
 end
 
@@ -20,9 +21,10 @@ Restore default integer math to overflow-permissive operations. Only works at to
 """
 macro default_unchecked()
 return quote
-    Base.eval(:((Base.:+)(x::T, y::T) where {T<:Base.BitInteger} = Main.unchecked_add(x, y)))
-    Base.eval(:((Base.:-)(x::T, y::T) where {T<:Base.BitInteger} = Main.unchecked_sub(x, y)))
-    Base.eval(:((Base.:*)(x::T, y::T) where {T<:Base.BitInteger} = Main.unchecked_mul(x, y)))
+    Base.eval(:((Base.:-)(x::T) where T <: Base.BitInteger = Main.unchecked_neg(x)))
+    Base.eval(:((Base.:+)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_add(x, y)))
+    Base.eval(:((Base.:-)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_sub(x, y)))
+    Base.eval(:((Base.:*)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_mul(x, y)))
 end
 end
 
@@ -49,22 +51,36 @@ macro checked(expr::Expr)
 end
 
 const op_checked = Dict(
-    # Symbol("unary-") => :(Base.neg_int),
+    Symbol("unary-") => :(checked_neg),
+    Symbol("ambig-") => :(checked_negsub),
     :+ => :(checked_add),
     :- => :(checked_sub),
     :* => :(checked_mul),
+    :+= => :(checked_add),
+    :-= => :(checked_sub),
+    :*= => :(checked_mul),
     # :abs => :(unchecked_abs)
 )
 
 const op_unchecked = Dict(
-    # Symbol("unary-") => :(Base.neg_int),
+    Symbol("unary-") => :(unchecked_neg),
+    Symbol("ambig-") => :(unchecked_negsub),
     :+ => :(unchecked_add),
     :- => :(unchecked_sub),
     :* => :(unchecked_mul),
+    :+= => :(unchecked_add),
+    :-= => :(unchecked_sub),
+    :*= => :(unchecked_mul),
     # :abs => :(unchecked_abs)
 )
 
-# copied from CheckedArithmetic.jl and modified so that it doesn't traverse internal @checked/@unchecked blocks
+# resolve ambiguity when `-` used as symbol
+unchecked_negsub(x) = unchecked_neg(x)
+unchecked_negsub(x, y) = unchecked_sub(x, y)
+checked_negsub(x) = checked_neg(x)
+checked_negsub(x, y) = checked_sub(x, y)
+
+# copied from CheckedArithmetic.jl and modified it
 function replace_op!(expr::Expr, op_map::Dict)
     if isexpr(expr, :call)
         f, len = expr.args[1], length(expr.args)
@@ -88,11 +104,26 @@ function replace_op!(expr::Expr, op_map::Dict)
                 expr.args[1] = op
             end
         end
-        for a in Iterators.drop(expr.args, 1)
+        for i in 2:length(expr.args)
+            a = expr.args[i]
             if isa(a, Expr)
                 replace_op!(a, op_map)
+            elseif isa(a, Symbol)                 # operator as symbol function argument, e.g. `fold(+, ...)`
+                op = if a == :-
+                    get(op_map, Symbol("ambig-"), a)
+                else
+                    get(op_map, a, a)
+                end
+                expr.args[i] = op
             end
         end
+    elseif isexpr(expr, (:+=, :-=, :*=))          # in-place operator
+        target = expr.args[1]
+        arg = expr.args[2]
+        op = expr.head
+        op = get(op_map, op, op)
+        expr.head = :(=)
+        expr.args[2] = Expr(:call, op, target, arg)
     elseif !isexpr(expr, :macrocall) || expr.args[1] ∉ (Symbol("@checked"), Symbol("@unchecked"))
         for a in expr.args
             if isa(a, Expr)

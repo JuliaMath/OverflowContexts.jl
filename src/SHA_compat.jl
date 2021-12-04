@@ -60,15 +60,14 @@ import .SHA: transform!, SHA2_224_CTX, SHA2_256_CTX, SHA2_384_CTX, SHA2_512_CTX,
     end
 
     # Compute the current intermediate hash value
-    # @unchecked doesn't currently work with assignment operators
-    context.state[1] = context.state[1] + a
-    context.state[2] = context.state[2] + b
-    context.state[3] = context.state[3] + c
-    context.state[4] = context.state[4] + d
-    context.state[5] = context.state[5] + e
-    context.state[6] = context.state[6] + f
-    context.state[7] = context.state[7] + g
-    context.state[8] = context.state[8] + h
+    context.state[1] += a
+    context.state[2] += b
+    context.state[3] += c
+    context.state[4] += d
+    context.state[5] += e
+    context.state[6] += f
+    context.state[7] += g
+    context.state[8] += h
 end
 
 
@@ -129,12 +128,12 @@ end
 
     # Compute the current intermediate hash value
     # @unchecked doesn't currently work with assignment operators
-    context.state[1] = context.state[1] + a
-    context.state[2] = context.state[2] + b
-    context.state[3] = context.state[3] + c
-    context.state[4] = context.state[4] + d
-    context.state[5] = context.state[5] + e
-    context.state[6] = context.state[6] + f
-    context.state[7] = context.state[7] + g
-    context.state[8] = context.state[8] + h
+    context.state[1] += a
+    context.state[2] += b
+    context.state[3] += c
+    context.state[4] += d
+    context.state[5] += e
+    context.state[6] += f
+    context.state[7] += g
+    context.state[8] += h
 end
