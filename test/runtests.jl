@@ -179,3 +179,32 @@ end
     @test a == -2
 end
 
+module CheckedModule
+    using OverflowContexts, Test
+    @default_checked
+    testfunc() = @test_throws OverflowError typemax(Int) + 1
+
+    module NestedUncheckedModule
+        using OverflowContexts, Test
+        @default_unchecked
+        testfunc() = @test typemax(Int) + 1 == typemin(Int)
+    end
+end
+
+module UncheckedModule
+    using OverflowContexts, Test
+    @default_unchecked
+    testfunc() = @test typemax(Int) + 1 == typemin(Int)
+    module NestedCheckedModule
+        using OverflowContexts, Test
+        @default_checked
+        testfunc() = @test_throws OverflowError typemax(Int) + 1
+    end
+end
+
+@testset "module-specific contexts" begin
+    CheckedModule.testfunc()
+    CheckedModule.NestedUncheckedModule.testfunc()
+    UncheckedModule.testfunc()
+    UncheckedModule.NestedCheckedModule.testfunc()
+end

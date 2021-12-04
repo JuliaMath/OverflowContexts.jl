@@ -1,3 +1,4 @@
+import Base: BitInteger
 import Base.Meta: isexpr
 
 const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
@@ -5,31 +6,33 @@ const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
 """
     @default_checked
 
-Redirect default integer math to overflow-checked operators. Only works at top-level.
+Redirect default integer math to overflow-checked operators for the current module. Only works at top-level.
 """
 macro default_checked()
-return quote
-    Base.eval(:((Base.:-)(x::T) where T <: Base.BitInteger = Main.checked_neg(x)))
-    Base.eval(:((Base.:+)(x::T, y::T) where T <: Base.BitInteger = Main.checked_add(x, y)))
-    Base.eval(:((Base.:-)(x::T, y::T) where T <: Base.BitInteger = Main.checked_sub(x, y)))
-    Base.eval(:((Base.:*)(x::T, y::T) where T <: Base.BitInteger = Main.checked_mul(x, y)))
-    Base.eval(:((Base.abs)(x::T) where T <: Main.SignedBitInteger = Main.checked_abs(x)))
-end
+    quote
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.checked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.checked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.checked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.checked_abs(x)))
+        nothing
+    end
 end
 
 """
     @default_unchecked
 
-Restore default integer math to overflow-permissive operations. Only works at top-level.
+Restore default integer math to overflow-permissive operators for the current module. Only works at top-level.
 """
 macro default_unchecked()
-return quote
-    Base.eval(:((Base.:-)(x::T) where T <: Base.BitInteger = Main.unchecked_neg(x)))
-    Base.eval(:((Base.:+)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_add(x, y)))
-    Base.eval(:((Base.:-)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_sub(x, y)))
-    Base.eval(:((Base.:*)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_mul(x, y)))
-    Base.eval(:((Base.abs)(x::T) where T <: Main.SignedBitInteger = Main.unchecked_abs(x)))
-end
+    quote
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.unchecked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.unchecked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.unchecked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.unchecked_mul(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.unchecked_abs(x)))
+        nothing
+    end
 end
 
 """
