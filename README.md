@@ -1,6 +1,6 @@
 # OverflowContexts.jl
 
-This package extends `CheckedArithmetic.jl` to provide the following overall features:
+This package conceptually extends `CheckedArithmetic.jl` to provide the following overall features:
 1. Ability to set the global default to overflow-checked or overflow-permissive operations.
 2. Ability to specify whether a block of code should use overflow-checked or overflow-permissive operations regardless of the default.
 
