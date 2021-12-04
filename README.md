@@ -52,4 +52,11 @@ a() # ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64
 @default_unchecked
 
 a()  # -9223372036854775808
+
+# rewrite a symbol
+@checked foldl(+, (typemax(Int), 1))
+
+# assignment operators
+a = typemax(Int)
+@checked a += 1
 ```
