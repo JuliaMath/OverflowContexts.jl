@@ -8,7 +8,7 @@ Together, these provide checked and unchecked contexts, as in other languages li
 https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/checked-and-unchecked
 
 It's important to know how these interact with Julia. When you set a default through `@default_checked` and `@default_unchecked`, the function definitions
-for the `+`, `-`, and `*` operators are being redirected. As those methods are new, all methods that are eligible for being recompiled will do so to
+for the `+`, `-`, and `*` operators, and `abs` function, are being redirected. As those methods are new, all methods that are eligible for being recompiled will do so to
 incorporate the new method definitions. Some methods may not be recompiled, and may not adopt the new methods. This may also cause a long delay when running
 code the first time after these are set. Thus, I recommended that you only rarely change the default context.
 
