@@ -1,7 +1,7 @@
 import Base: promote, neg_int, add_int, sub_int, mul_int, afoldl, BitInteger, @_inline_meta
-import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul,
+import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs,
     add_with_overflow, sub_with_overflow, mul_with_overflow,
-    BrokenSignedInt, BrokenUnsignedInt, BrokenSignedIntMul, BrokenUnsignedIntMul,
+    BrokenSignedInt, BrokenUnsignedInt, BrokenSignedIntMul, BrokenUnsignedIntMul, SignedInt,
     throw_overflowerr_binaryop, throw_overflowerr_negation
 
 # convert multi-argument calls into nested two-argument calls
@@ -19,11 +19,13 @@ unchecked_neg(x) = -x
 unchecked_add(x, y) = x + y
 unchecked_sub(x, y) = x - y
 unchecked_mul(x, y) = x * y
+unchecked_abs(x) = abs(x)
 
 checked_neg(x) = -x
 checked_add(x, y) = x + y
 checked_sub(x, y) = x - y
 checked_mul(x, y) = x * y
+checked_abs(x) = abs(x)
 
 # promote unmatched number types to same type
 unchecked_add(x::Number, y::Number) = unchecked_add(promote(x, y)...)
@@ -50,6 +52,7 @@ unchecked_neg(x::T) where T <: BitInteger = neg_int(x)
 unchecked_add(x::T, y::T) where T <: BitInteger = add_int(x, y)
 unchecked_sub(x::T, y::T) where T <: BitInteger = sub_int(x, y)
 unchecked_mul(x::T, y::T) where T <: BitInteger = mul_int(x, y)
+unchecked_abs(x::T) where T <: SignedBitInteger = flipsign(x, x)
 
 checked_neg(x::T) where T <: BitInteger = @checked T(0) - x
 function checked_add(x::T, y::T) where T <: BitInteger
@@ -70,6 +73,12 @@ function checked_mul(x::T, y::T) where T <: BitInteger
     b && throw_overflowerr_binaryop(:*, x, y)
     z
 end
+function checked_abs(x::SignedBitInteger)
+    @_inline_meta
+    r = @unchecked ifelse(x < 0, -x, x)
+    r < 0 && throw(OverflowError(string("checked arithmetic: cannot compute |x| for x = ", x, "::", typeof(x))))
+    r
+ end
 
 
 # add @unchecked to necessary support methods

@@ -24,7 +24,7 @@ for i ∈ (1, 2)
             # @test_throws OverflowError typemin(Int) ^ 2
             # @test_throws OverflowError typemax(UInt) ^ 2
 
-            # @test_throws OverflowError abs(typemin(Int))
+            @test_throws OverflowError abs(typemin(Int))
         end
     else
         testname = "unchecked default"
@@ -48,7 +48,7 @@ for i ∈ (1, 2)
             # @test typemin(Int) ^ 2 == 0
             # @test typemax(UInt) ^ 2 == 0x0000000000000001
 
-            # @test abs(typemin(Int)) == typemin(Int)
+            @test abs(typemin(Int)) == typemin(Int)
         end
     end
 
@@ -71,7 +71,7 @@ for i ∈ (1, 2)
             # @test_throws OverflowError @checked typemin(Int) ^ 2
             # @test_throws OverflowError @checked typemax(UInt) ^ 2
     
-            # @test_throws OverflowError @checked abs(typemin(Int))
+            @test_throws OverflowError @checked abs(typemin(Int))
         end
     
         @testset "unchecked expressions" begin
@@ -92,7 +92,7 @@ for i ∈ (1, 2)
             # @test @unchecked typemin(Int) ^ 2 == 0
             # @test @unchecked typemax(UInt) ^ 2 == 0x0000000000000001
     
-            # @test @unchecked abs(typemin(Int)) == typemin(Int)
+            @test @unchecked abs(typemin(Int)) == typemin(Int)
         end
     
         @testset "lowest-level macro takes priority" begin
@@ -123,6 +123,8 @@ for i ∈ (1, 2)
             @test @unchecked 1.0 ^ 3.0 == 1.0
             @test @checked 1 ^ 3.0 == 1.0
             @test @unchecked 1 ^ 3.0 == 1.0
+            @test @checked abs(-1.0) == 1.0
+            @test @unchecked abs(-1.0) == 1.0
         end
     end
 end
@@ -131,22 +133,28 @@ end
 
 @testset "symbol replacement" begin
     expr = @macroexpand @checked foldl(+, [])
-    expr.args[2] == :checked_add
+    @test expr.args[2] == :checked_add
 
     expr = @macroexpand @unchecked foldl(+, [])
-    expr.args[2] == :unchecked_add
+    @test expr.args[2] == :unchecked_add
 
     expr = @macroexpand @checked foldl(-, [])
-    expr.args[2] == :checked_negsub
+    @test expr.args[2] == :checked_negsub
 
     expr = @macroexpand @unchecked foldl(-, [])
-    expr.args[2] == :unchecked_negsub
+    @test expr.args[2] == :unchecked_negsub
 
     expr = @macroexpand @checked foldl(*, [])
-    expr.args[2] == :checked_mul
+    @test expr.args[2] == :checked_mul
 
     expr = @macroexpand @unchecked foldl(*, [])
-    expr.args[2] == :unchecked_mul
+    @test expr.args[2] == :unchecked_mul
+
+    expr = @macroexpand @checked foldl(:abs, [])
+    @test expr.args[2] == :checked_abs
+
+    expr = @macroexpand @unchecked foldl(:abs, [])
+    @test expr.args[2] == :unchecked_abs
 end
 
 @testset "negsub helper methods dispatch correctly" begin

@@ -1,5 +1,7 @@
 import Base.Meta: isexpr
 
+const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
+
 """
     @default_checked
 
@@ -11,6 +13,7 @@ return quote
     Base.eval(:((Base.:+)(x::T, y::T) where T <: Base.BitInteger = Main.checked_add(x, y)))
     Base.eval(:((Base.:-)(x::T, y::T) where T <: Base.BitInteger = Main.checked_sub(x, y)))
     Base.eval(:((Base.:*)(x::T, y::T) where T <: Base.BitInteger = Main.checked_mul(x, y)))
+    Base.eval(:((Base.abs)(x::T) where T <: Main.SignedBitInteger = Main.checked_abs(x)))
 end
 end
 
@@ -25,6 +28,7 @@ return quote
     Base.eval(:((Base.:+)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_add(x, y)))
     Base.eval(:((Base.:-)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_sub(x, y)))
     Base.eval(:((Base.:*)(x::T, y::T) where T <: Base.BitInteger = Main.unchecked_mul(x, y)))
+    Base.eval(:((Base.abs)(x::T) where T <: Main.SignedBitInteger = Main.unchecked_abs(x)))
 end
 end
 
@@ -59,7 +63,7 @@ const op_checked = Dict(
     :+= => :(checked_add),
     :-= => :(checked_sub),
     :*= => :(checked_mul),
-    # :abs => :(unchecked_abs)
+    :abs => :(checked_abs)
 )
 
 const op_unchecked = Dict(
@@ -71,7 +75,7 @@ const op_unchecked = Dict(
     :+= => :(unchecked_add),
     :-= => :(unchecked_sub),
     :*= => :(unchecked_mul),
-    # :abs => :(unchecked_abs)
+    :abs => :(unchecked_abs)
 )
 
 # resolve ambiguity when `-` used as symbol
@@ -114,6 +118,9 @@ function replace_op!(expr::Expr, op_map::Dict)
                 else
                     get(op_map, a, a)
                 end
+                expr.args[i] = op
+            elseif isa(a, QuoteNode)
+                op = get(op_map, a.value, a.value)
                 expr.args[i] = op
             end
         end
