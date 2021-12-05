@@ -80,7 +80,7 @@ function checked_mul(x::T, y::T) where T <: BitInteger
     b && throw_overflowerr_binaryop(:*, x, y)
     z
 end
-function checked_pow(x::T, y::T) where T <: BitInteger
+function checked_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger}
     @_inline_meta
     z, b = pow_with_overflow(x, y)
     b && throw_overflowerr_binaryop(:^, x, y)
