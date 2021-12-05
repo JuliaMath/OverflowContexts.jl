@@ -219,3 +219,7 @@ end
     UncheckedModule.testfunc()
     UncheckedModule.NestedCheckedModule.testfunc()
 end
+
+# ensure pow methods don't promote on the power
+@test typeof(@unchecked 3 ^ UInt(4)) == Int
+@test typeof(@checked 3 ^ UInt(4)) == Int
