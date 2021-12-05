@@ -7,11 +7,11 @@ This package conceptually extends `CheckedArithmetic.jl` to provide the followin
 Together, these provide checked and unchecked contexts, as in other languages like C#:
 https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/checked-and-unchecked
 
-`@default_checked` and `@default_unchecked` create shadow copies of the `+`, `-`, `*`, and `abs` functions that redirect to overflow-checked
+`@default_checked` and `@default_unchecked` create shadow copies of the `+`, `-`, `*`, `^`, and `abs` functions that redirect to overflow-checked
 or overflow-permissive operations, respectively, within the module it was executed in. All non-integer arguments are passed through to their
 respective Base methods.
 
-The expression-level `@checked` and `@unchecked` rewrite instances of `+`, `-`, and `*`, and `abs` functions, to functions specific to the
+The expression-level `@checked` and `@unchecked` rewrite instances of `+`, `-`, `*`, `^`, and `abs` functions, to functions specific to the
 checked or permissive operation, and thus are not affected by switching the default. Symbols for the functions will also be replaced, to support
 calls like `foldl(+, v)`. If these macros are nested, the lowest level takes precedence so that an unchecked context can be nested inside a checked
 context and vice versa.
