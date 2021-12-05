@@ -20,9 +20,9 @@ for i ∈ (1, 2)
             @test_throws OverflowError typemin(Int) * 2
             @test_throws OverflowError typemax(UInt) * 2
 
-            # @test_throws OverflowError typemax(Int) ^ 2
-            # @test_throws OverflowError typemin(Int) ^ 2
-            # @test_throws OverflowError typemax(UInt) ^ 2
+            @test_throws OverflowError typemax(Int) ^ 2
+            @test_throws OverflowError typemin(Int) ^ 2
+            @test_throws OverflowError typemax(UInt) ^ 2
 
             @test_throws OverflowError abs(typemin(Int))
         end
@@ -44,9 +44,9 @@ for i ∈ (1, 2)
             @test typemin(Int) * 2 == 0
             @test typemax(UInt) * 2 == typemax(UInt) - 1
 
-            # @test typemax(Int) ^ 2 == 1
-            # @test typemin(Int) ^ 2 == 0
-            # @test typemax(UInt) ^ 2 == 0x0000000000000001
+            @test typemax(Int) ^ 2 == 1
+            @test typemin(Int) ^ 2 == 0
+            @test typemax(UInt) ^ 2 == UInt(1)
 
             @test abs(typemin(Int)) == typemin(Int)
         end
@@ -67,9 +67,9 @@ for i ∈ (1, 2)
             @test_throws OverflowError @checked typemin(Int) * 2
             @test_throws OverflowError @checked typemax(UInt) * 2
     
-            # @test_throws OverflowError @checked typemax(Int) ^ 2
-            # @test_throws OverflowError @checked typemin(Int) ^ 2
-            # @test_throws OverflowError @checked typemax(UInt) ^ 2
+            @test_throws OverflowError @checked typemax(Int) ^ 2
+            @test_throws OverflowError @checked typemin(Int) ^ 2
+            @test_throws OverflowError @checked typemax(UInt) ^ 2
     
             @test_throws OverflowError @checked abs(typemin(Int))
         end
@@ -88,9 +88,9 @@ for i ∈ (1, 2)
             @test @unchecked typemin(Int) * 2 == 0
             @test @unchecked typemax(UInt) * 2 == typemax(UInt) - 1
     
-            # @test @unchecked typemax(Int) ^ 2 == 1
-            # @test @unchecked typemin(Int) ^ 2 == 0
-            # @test @unchecked typemax(UInt) ^ 2 == 0x0000000000000001
+            @test @unchecked typemax(Int) ^ 2 == 1
+            @test @unchecked typemin(Int) ^ 2 == 0
+            @test @unchecked typemax(UInt) ^ 2 == UInt(1)
     
             @test @unchecked abs(typemin(Int)) == typemin(Int)
         end
@@ -150,6 +150,12 @@ end
     expr = @macroexpand @unchecked foldl(*, [])
     @test expr.args[2] == :unchecked_mul
 
+    expr = @macroexpand @checked foldl(^, [])
+    @test expr.args[2] == :checked_pow
+
+    expr = @macroexpand @unchecked foldl(^, [])
+    @test expr.args[2] == :unchecked_pow
+
     expr = @macroexpand @checked foldl(:abs, [])
     @test expr.args[2] == :checked_abs
 
@@ -177,6 +183,11 @@ end
     @test_throws OverflowError @checked a *= 2
     @unchecked a *= 2
     @test a == -2
+
+    a = typemax(Int)
+    @test_throws OverflowError @checked a ^= 2
+    @unchecked a ^= 2
+    @test a == 1
 end
 
 module CheckedModule

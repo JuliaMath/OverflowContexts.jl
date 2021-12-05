@@ -14,6 +14,8 @@ macro default_checked()
         (@__MODULE__).eval(:(+(x...) = OverflowContexts.checked_add(x...)))
         (@__MODULE__).eval(:(-(x...) = OverflowContexts.checked_sub(x...)))
         (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.checked_pow(x...)))
         (@__MODULE__).eval(:(abs(x) = OverflowContexts.checked_abs(x)))
         nothing
     end
@@ -30,6 +32,7 @@ macro default_unchecked()
         (@__MODULE__).eval(:(+(x...) = OverflowContexts.unchecked_add(x...)))
         (@__MODULE__).eval(:(-(x...) = OverflowContexts.unchecked_sub(x...)))
         (@__MODULE__).eval(:(*(x...) = OverflowContexts.unchecked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.unchecked_pow(x...)))
         (@__MODULE__).eval(:(abs(x) = OverflowContexts.unchecked_abs(x)))
         nothing
     end
@@ -63,10 +66,12 @@ const op_checked = Dict(
     :+ => :(checked_add),
     :- => :(checked_sub),
     :* => :(checked_mul),
+    :^ => :(checked_pow),
     :+= => :(checked_add),
     :-= => :(checked_sub),
     :*= => :(checked_mul),
-    :abs => :(checked_abs)
+    :^= => :(checked_pow),
+    :abs => :(checked_abs),
 )
 
 const op_unchecked = Dict(
@@ -75,9 +80,11 @@ const op_unchecked = Dict(
     :+ => :(unchecked_add),
     :- => :(unchecked_sub),
     :* => :(unchecked_mul),
+    :^ => :(unchecked_pow),
     :+= => :(unchecked_add),
     :-= => :(unchecked_sub),
     :*= => :(unchecked_mul),
+    :^= => :(unchecked_pow),
     :abs => :(unchecked_abs)
 )
 
@@ -127,7 +134,7 @@ function replace_op!(expr::Expr, op_map::Dict)
                 expr.args[i] = op
             end
         end
-    elseif isexpr(expr, (:+=, :-=, :*=))          # in-place operator
+    elseif isexpr(expr, (:+=, :-=, :*=, :^=))     # in-place operator
         target = expr.args[1]
         arg = expr.args[2]
         op = expr.head
