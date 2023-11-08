@@ -52,7 +52,7 @@ end
 """
     @checked expr
 
-Perform all integer operations in `expr` using overflow-permissive arithmetic.
+Perform all integer operations in `expr` using overflow-checked arithmetic.
 """
 macro checked(expr::Expr)
     isa(expr, Expr) || return expr
