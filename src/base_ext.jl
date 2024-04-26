@@ -4,6 +4,10 @@ import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked
     add_with_overflow, sub_with_overflow, mul_with_overflow, SignedInt,
     throw_overflowerr_binaryop
 
+if VERSION ≥ v"1.11-alpha"
+    import Base.Checked: checked_pow
+end
+
 # convert multi-argument calls into nested two-argument calls
 unchecked_add(a, b, c, xs...) = @unchecked (@_inline_meta; afoldl(+, (+)((+)(a, b), c), xs...))
 unchecked_sub(a, b, c, xs...) = @unchecked (@_inline_meta; afoldl(-, (-)((-)(a, b), c), xs...))
@@ -61,7 +65,17 @@ unchecked_mul(x::T, y::T) where T <: BitInteger = mul_int(x, y)
 unchecked_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger} = power_by_squaring(x, y)
 unchecked_abs(x::T) where T <: SignedBitInteger = flipsign(x, x)
 
- function pow_with_overflow(x_, p::Integer)
+if VERSION < v"1.11"
+# Base.Checked only gained checked powers in 1.11
+
+function checked_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger}
+    @_inline_meta
+    z, b = pow_with_overflow(x, y)
+    b && throw_overflowerr_binaryop(:^, x, y)
+    z
+end
+
+function pow_with_overflow(x_, p::Integer)
     x = to_power_type(x_)
     if p == 1
         return (copy(x), false)
@@ -98,4 +112,6 @@ pow_with_overflow(x::Bool, p::Unsigned) = ((p==0) | x, false)
 function pow_with_overflow(x::Bool, p::Integer)
     p < 0 && !x && throw_domerr_powbysq(x, p)
     return (p==0) | x, false
+end
+
 end
