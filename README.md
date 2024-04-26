@@ -9,7 +9,7 @@ https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/check
 
 `@default_checked` and `@default_unchecked` create shadow copies of the `+`, `-`, `*`, `^`, and `abs` functions that redirect to overflow-checked
 or overflow-permissive operations, respectively, within the module it was executed in. All non-integer arguments are passed through to their
-respective Base methods.
+respective Base methods. **Important:** The first usage this macro must occur earlier than the first usage of the affected Base functions.
 
 The expression-level `@checked` and `@unchecked` rewrite instances of `+`, `-`, `*`, `^`, and `abs` functions, to functions specific to the
 checked or permissive operation, and thus are not affected by switching the default. Symbols for the functions will also be replaced, to support
@@ -18,6 +18,8 @@ context and vice versa.
 
 ```julia
 using OverflowContexts
+@default_unchecked # Julia default, but need to place first so later usages will work
+
 x = typemax(Int) # 9223372036854775807
 x + 1 # -9223372036854775808
 
