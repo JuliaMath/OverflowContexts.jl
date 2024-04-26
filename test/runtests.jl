@@ -1,5 +1,5 @@
-using Test
 using OverflowContexts
+using Test
 
 @testset "checked expressions" begin
     @test_throws OverflowError @checked -typemin(Int)
