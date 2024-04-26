@@ -33,7 +33,7 @@ checked_abs(x) = Base.abs(x)
 unchecked_add(x::Number, y::Number) = unchecked_add(promote(x, y)...)
 unchecked_sub(x::Number, y::Number) = unchecked_sub(promote(x, y)...)
 unchecked_mul(x::Number, y::Number) = unchecked_mul(promote(x, y)...)
-unchecked_mul(x::Number, y::Number) = unchecked_mul(promote(x, y)...)
+unchecked_pow(x::Number, y::Number) = unchecked_pow(promote(x, y)...)
 
 checked_add(x::Number, y::Number) = checked_add(promote(x, y)...)
 checked_sub(x::Number, y::Number) = checked_sub(promote(x, y)...)
