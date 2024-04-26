@@ -61,38 +61,6 @@ unchecked_mul(x::T, y::T) where T <: BitInteger = mul_int(x, y)
 unchecked_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger} = power_by_squaring(x, y)
 unchecked_abs(x::T) where T <: SignedBitInteger = flipsign(x, x)
 
-checked_neg(x::T) where T <: BitInteger = @checked T(0) - x
-function checked_add(x::T, y::T) where T <: BitInteger
-    @_inline_meta
-    z, b = add_with_overflow(x, y)
-    b && throw_overflowerr_binaryop(:+, x, y)
-    z
-end
-function checked_sub(x::T, y::T) where T <: BitInteger
-    @_inline_meta
-    z, b = sub_with_overflow(x, y)
-    b && throw_overflowerr_binaryop(:-, x, y)
-    z
-end
-function checked_mul(x::T, y::T) where T <: BitInteger
-    @_inline_meta
-    z, b = mul_with_overflow(x, y)
-    b && throw_overflowerr_binaryop(:*, x, y)
-    z
-end
-function checked_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger}
-    @_inline_meta
-    z, b = pow_with_overflow(x, y)
-    b && throw_overflowerr_binaryop(:^, x, y)
-    z
-end
-function checked_abs(x::SignedBitInteger)
-    @_inline_meta
-    r = @unchecked ifelse(x < 0, -x, x)
-    r < 0 && throw(OverflowError(string("checked arithmetic: cannot compute |x| for x = ", x, "::", typeof(x))))
-    r
- end
-
  function pow_with_overflow(x_, p::Integer)
     x = to_power_type(x_)
     if p == 1
