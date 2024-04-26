@@ -166,16 +166,27 @@ end
 
 # Trying to set a default after referencing the operator should error
 module BadCheckedModule
-    using OverflowContexts, Test
+    using OverflowContexts
     x = 1 + 1
-    @test_throws ErrorException @default_checked
-    @test -(typemin(Int)) == typemin(Int) # checked methods reversed to Base on error
+    try
+        @default_checked
+        passed = false
+    catch
+        passed = -(typemin(Int)) == typemin(Int)
+    end
+
+    using Test # loads `-` from Base and would prevent above from working properly
+    @testset "default_checked errors on conflict and reverses inconsistent state" begin
+        @test passed
+    end
 end
 
 module BadUncheckedModule
     using OverflowContexts, Test
     x = 1 + 1
-    @test_throws ErrorException @default_unchecked
+    @testset "default_checked errors on conflict and reverses inconsistent state" begin
+        @test_throws ErrorException @default_unchecked
+    end
 end
 
 @testset "ensure pow methods don't promote on the power" begin
