@@ -164,29 +164,24 @@ end
     UncheckedModule.NestedCheckedModule.testfunc()
 end
 
-# Trying to set a default after referencing the operator should error
-module BadCheckedModule
-    using OverflowContexts
+@testset "default methods error if Base symbol already resolved" begin
     x = 1 + 1
-    try
-        @default_checked
-        passed = false
-    catch
-        passed = -(typemin(Int)) == typemin(Int)
-    end
+    @test_throws ErrorException @default_checked
+    @test_throws ErrorException @default_unchecked
+    
+    (@__MODULE__).eval(:(
+        module BadCheckedModule
+            using OverflowContexts, Test
+            x = 1 + 1
+            @test_throws ErrorException @default_checked
+        end))
 
-    using Test # loads `-` from Base and would prevent above from working properly
-    @testset "default_checked errors on conflict and reverses inconsistent state" begin
-        @test passed
-    end
-end
-
-module BadUncheckedModule
-    using OverflowContexts, Test
-    x = 1 + 1
-    @testset "default_checked errors on conflict and reverses inconsistent state" begin
-        @test_throws ErrorException @default_unchecked
-    end
+    (@__MODULE__).eval(:(
+        module BadUncheckedModule
+            using OverflowContexts, Test
+            x = 1 + 1
+            @test_throws ErrorException @default_unchecked
+        end))
 end
 
 @testset "ensure pow methods don't promote on the power" begin

@@ -10,17 +10,14 @@ Redirect default integer math to overflow-checked operators for the current modu
 """
 macro default_checked()
     quote
-        try
-            (@__MODULE__).eval(:(-(x) = OverflowContexts.checked_neg(x)))
-            (@__MODULE__).eval(:(+(x...) = OverflowContexts.checked_add(x...)))
-            (@__MODULE__).eval(:(-(x...) = OverflowContexts.checked_sub(x...)))
-            (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
-            (@__MODULE__).eval(:(^(x...) = OverflowContexts.checked_pow(x...)))
-            (@__MODULE__).eval(:(abs(x) = OverflowContexts.checked_abs(x)))
-        catch ex
-            process_failed_default_macro(ex)
-            rethrow()
-        end
+        any(Base.isbindingresolved.(Ref(@__MODULE__), (:+, :-, :*, :^, :abs))) &&
+            error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.checked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.checked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.checked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.checked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.checked_abs(x)))
         nothing
     end
 end
@@ -32,48 +29,15 @@ Restore default integer math to overflow-permissive operators for the current mo
 """
 macro default_unchecked()
     quote
-        try
-            (@__MODULE__).eval(:(-(x) = OverflowContexts.unchecked_neg(x)))
-            (@__MODULE__).eval(:(+(x...) = OverflowContexts.unchecked_add(x...)))
-            (@__MODULE__).eval(:(-(x...) = OverflowContexts.unchecked_sub(x...)))
-            (@__MODULE__).eval(:(*(x...) = OverflowContexts.unchecked_mul(x...)))
-            (@__MODULE__).eval(:(^(x...) = OverflowContexts.unchecked_pow(x...)))
-            (@__MODULE__).eval(:(abs(x) = OverflowContexts.unchecked_abs(x)))
-        catch ex
-            process_failed_default_macro(ex)
-            rethrow()
-        end
-        nothing
-    end
-end
-
-function process_failed_default_macro(ex::Exception)
-    if typeof(ex) <: ErrorException && occursin("explicitly imported", ex.msg)
-        restore_methods_to_base()
-        if VERSION < v"1.2"
-            error(ex.msg, "\nA default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
-        else
+        any(Base.isbindingresolved.(Ref(@__MODULE__), (:+, :-, :*, :^, :abs))) &&
             error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
-        end
-    end
-end
-
-function restore_methods_to_base()
-    try
-        # Ensure order is the same as in the `default_` macros
-        (@__MODULE__).eval(:(-(x) = Base.:-(x)))
-        (@__MODULE__).eval(:(+(x...) = Base.:+(x...)))
-        (@__MODULE__).eval(:(-(x...) = Base.:-(x...)))
-        (@__MODULE__).eval(:(*(x...) = Base.:*(x...)))
-        (@__MODULE__).eval(:(^(x...) = Base.:^(x...)))
-        (@__MODULE__).eval(:(abs(x) = Base.abs(x)))
-    catch ex
-        if typeof(ex) <: ErrorException && occursin("explicitly imported", ex.msg)
-            # We don't care if there's an error here, we just want to reverse the damage done
-            # by a partial application of the default macro.
-        else
-            rethrow()
-        end
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.unchecked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.unchecked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.unchecked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.unchecked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.unchecked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.unchecked_abs(x)))
+        nothing
     end
 end
 
