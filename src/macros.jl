@@ -46,7 +46,7 @@ end
 
 Perform all integer operations in `expr` using overflow-permissive arithmetic.
 """
-macro unchecked(expr::Expr)
+macro unchecked(expr)
     isa(expr, Expr) || return expr
     expr = copy(expr)
     return esc(replace_op!(expr, op_unchecked))
@@ -57,7 +57,7 @@ end
 
 Perform all integer operations in `expr` using overflow-checked arithmetic.
 """
-macro checked(expr::Expr)
+macro checked(expr)
     isa(expr, Expr) || return expr
     expr = copy(expr)
     return esc(replace_op!(expr, op_checked))
