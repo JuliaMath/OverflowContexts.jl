@@ -23,56 +23,61 @@ using Test
 end
 
 @testset "unchecked expressions" begin
-    @test @unchecked -typemin(Int) == typemin(Int)
-    @test @unchecked -UInt(1) == typemax(UInt)
+    @test @unchecked(-typemin(Int)) == typemin(Int)
+    @test @unchecked(-UInt(1)) == typemax(UInt)
 
-    @test @unchecked typemax(Int) + 1 == typemin(Int)
-    @test @unchecked typemax(UInt) + 1 == typemin(UInt)
+    @test @unchecked(typemax(Int) + 1) == typemin(Int)
+    @test @unchecked(typemax(UInt) + 1) == typemin(UInt)
 
-    @test @unchecked typemin(Int) - 1 == typemax(Int)
-    @test @unchecked typemin(UInt) - 1 == typemax(UInt)
+    @test @unchecked(typemin(Int) - 1) == typemax(Int)
+    @test @unchecked(typemin(UInt) - 1) == typemax(UInt)
 
-    @test @unchecked typemax(Int) * 2 == -2
-    @test @unchecked typemin(Int) * 2 == 0
-    @test @unchecked typemax(UInt) * 2 == typemax(UInt) - 1
+    @test @unchecked(typemax(Int) * 2) == -2
+    @test @unchecked(typemin(Int) * 2) == 0
+    @test @unchecked(typemax(UInt) * 2) == typemax(UInt) - 1
 
-    @test @unchecked typemax(Int) ^ 2 == 1
-    @test @unchecked typemin(Int) ^ 2 == 0
-    @test @unchecked typemax(UInt) ^ 2 == UInt(1)
+    @test @unchecked(typemax(Int) ^ 2) == 1
+    @test @unchecked(typemin(Int) ^ 2) == 0
+    @test @unchecked(typemax(UInt) ^ 2) == UInt(1)
 
-    @test @unchecked abs(typemin(Int)) == typemin(Int)
+    @test @unchecked(abs(typemin(Int))) == typemin(Int)
 end
 
 @testset "lowest-level macro takes priority" begin
     @checked begin
-        @test @unchecked typemax(Int) + 1 == typemin(Int)
+        @test @unchecked(typemax(Int) + 1) == typemin(Int)
     end
     @unchecked begin
         @test_throws OverflowError @checked typemax(Int) + 1
     end
 end
 
+@testset "literals passthrough" begin
+    @test @checked(-1) == -1
+    @test @unchecked(-1) == -1
+end
+
 @testset "non-integer math still works" begin
-    @test @checked -1.0 == -1
-    @test @unchecked -1.0 == -1
-    @test @checked 1.0 + 3.0 == 4.0
-    @test @unchecked 1.0 + 3.0 == 4.0
-    @test @checked 1 + 3.0 == 4.0
-    @test @unchecked 1 + 3.0 == 4.0
-    @test @checked 1.0 - 3.0 == -2.0
-    @test @unchecked 1.0 - 3.0 == -2.0
-    @test @checked 1 - 3.0 == -2.0
-    @test @unchecked 1 - 3.0 == -2.0
-    @test @checked 1.0 * 3.0 == 3.0
-    @test @unchecked 1.0 * 3.0 == 3.0
-    @test @checked 1 * 3.0 == 3.0
-    @test @unchecked 1 * 3.0 == 3.0
-    @test @checked 1.0 ^ 3.0 == 1.0
-    @test @unchecked 1.0 ^ 3.0 == 1.0
-    @test @checked 1 ^ 3.0 == 1.0
-    @test @unchecked 1 ^ 3.0 == 1.0
-    @test @checked abs(-1.0) == 1.0
-    @test @unchecked abs(-1.0) == 1.0
+    @test @checked(-1.0) == -1
+    @test @unchecked(-1.0) == -1
+    @test @checked(1.0 + 3.0) == 4.0
+    @test @unchecked(1.0 + 3.0) == 4.0
+    @test @checked(1 + 3.0) == 4.0
+    @test @unchecked(1 + 3.0) == 4.0
+    @test @checked(1.0 - 3.0) == -2.0
+    @test @unchecked(1.0 - 3.0) == -2.0
+    @test @checked(1 - 3.0) == -2.0
+    @test @unchecked(1 - 3.0) == -2.0
+    @test @checked(1.0 * 3.0) == 3.0
+    @test @unchecked(1.0 * 3.0) == 3.0
+    @test @checked(1 * 3.0) == 3.0
+    @test @unchecked(1 * 3.0) == 3.0
+    @test @checked(1.0 ^ 3.0) == 1.0
+    @test @unchecked(1.0 ^ 3.0) == 1.0
+    @test @checked(1 ^ 3.0) == 1.0
+    @test @unchecked(1 ^ 3.0) == 1.0
+    @test @checked(abs(-1.0)) == 1.0
+    @test @unchecked(abs(-1.0)) == 1.0
 end
 
 @testset "symbol replacement" begin
