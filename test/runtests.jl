@@ -1,6 +1,8 @@
 using OverflowContexts
 using Test
 
+@test isempty(detect_ambiguities(OverflowContexts, Base, Core))
+
 @testset "checked expressions" begin
     @test_throws OverflowError @checked -typemin(Int)
     @test_throws OverflowError @checked -UInt(1)
@@ -137,6 +139,18 @@ end
     @test_throws OverflowError @checked a ^= 2
     @unchecked a ^= 2
     @test a == 1
+end
+
+@checked begin
+    fooplus(x, y) = x + y
+    foominus(x, y) = x - y
+end
+
+@testset "rewrite inside block body" begin
+    @test fooplus(0x10, 0x20) === 0x30
+    @test_throws OverflowError fooplus(0xf0, 0x20)
+    @test foominus(0x30, 0x20) === 0x10
+    @test_throws OverflowError foominus(0x20, 0x30)
 end
 
 module CheckedModule
