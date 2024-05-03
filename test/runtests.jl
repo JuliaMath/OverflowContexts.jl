@@ -54,6 +54,40 @@ end
     @test @unchecked(2typemax(UInt)) == typemax(UInt) - 1
 end
 
+@testset "exhaustive checks over 16 bit math" begin
+    T = Int16
+    @testset "negation" begin
+        for i ∈ typemin(T) + T(1):typemax(T)
+            @test @checked(-i) == @unchecked(-i) == -i
+        end
+    end
+    @testset "addition" begin
+        for i ∈ typemin(T):typemax(T) - Int8(1)
+            @test @checked(i + T(1)) == @unchecked(i + T(1)) == i + T(1)
+        end
+    end
+    @testset "subtraction" begin
+        for i ∈ typemin(T) + T(1):typemax(T)
+            @test @checked(i - T(1)) == @unchecked(i - T(1)) == i - T(1)
+        end
+    end
+    @testset "multiplication" begin
+        for i ∈ typemin(T) ÷ T(2):typemax(T) ÷ T(2)
+            @test @checked(2i) == @unchecked(2i) == 2i
+        end
+    end
+    @testset "power" begin
+        for i ∈ ceil(T, -√(typemax(T))):floor(T, √(typemax(T)))
+            @test @checked(i ^ 2) == @unchecked(i ^ 2) == i ^ 2
+        end
+    end
+    @testset "abs" begin
+        for i ∈ typemin(T) + T(1):typemax(T)
+            @test @checked(abs(i)) == @unchecked(abs(i)) == abs(i)
+        end
+    end
+end
+
 @testset "lowest-level macro takes priority" begin
     @checked begin
         @test @unchecked(typemax(Int) + 1) == typemin(Int)
