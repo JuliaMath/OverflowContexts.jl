@@ -45,6 +45,15 @@ end
     @test @unchecked(abs(typemin(Int))) == typemin(Int)
 end
 
+@testset "juxtaposed multiplication works" begin
+    @test_throws OverflowError @checked 2typemax(Int)
+    @test_throws OverflowError @checked 2typemin(Int)
+    @test_throws OverflowError @checked 2typemax(UInt)
+    @test @unchecked(2typemax(Int)) == -2
+    @test @unchecked(2typemin(Int)) == 0
+    @test @unchecked(2typemax(UInt)) == typemax(UInt) - 1
+end
+
 @testset "lowest-level macro takes priority" begin
     @checked begin
         @test @unchecked(typemax(Int) + 1) == typemin(Int)
