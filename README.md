@@ -9,7 +9,7 @@ https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/check
 
 `@default_checked` and `@default_unchecked` create shadow copies of the `+`, `-`, `*`, `^`, and `abs` functions that redirect to overflow-checked
 or overflow-permissive operations, respectively, within the module it was executed in. All non-integer arguments are passed through to their
-respective Base methods. **Important:** If you wish to use this feature, the first usage this macro must occur earlier than the first usage of the affected Base functions. This is not necessary to use the expression-level macros.
+respective Base methods. **Important:** If you wish to use this feature, the first usage of this macro must occur earlier than the first usage of the affected Base functions. This is not necessary to use the expression-level macros.
 
 The expression-level `@checked` and `@unchecked` rewrite instances of `+`, `-`, `*`, `^`, and `abs` functions, to functions specific to the
 checked or permissive operation, and thus are not affected by switching the default. Symbols for the functions will also be replaced, to support
