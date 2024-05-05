@@ -1,5 +1,4 @@
 module OverflowContexts
-__precompile__(false)
 
 include("macros.jl")
 include("base_ext.jl")
