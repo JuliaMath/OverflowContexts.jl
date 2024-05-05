@@ -55,35 +55,36 @@ end
 end
 
 @testset "exhaustive checks over 16 bit math" begin
-    T = Int16
-    @testset "negation" begin
-        for i ∈ typemin(T) + T(1):typemax(T)
-            @test @checked(-i) == @unchecked(-i) == -i
+    for T ∈ (Int16, UInt16)
+        @testset "$T negation" begin
+            for i ∈ typemin(T) + T(1):typemax(T)
+                @test @checked(-i) == @unchecked(-i) == -i
+            end
         end
-    end
-    @testset "addition" begin
-        for i ∈ typemin(T):typemax(T) - Int8(1)
-            @test @checked(i + T(1)) == @unchecked(i + T(1)) == i + T(1)
+        @testset "$T addition" begin
+            for i ∈ typemin(T):typemax(T) - T(1)
+                @test @checked(i + T(1)) == @unchecked(i + T(1)) == i + T(1)
+            end
         end
-    end
-    @testset "subtraction" begin
-        for i ∈ typemin(T) + T(1):typemax(T)
-            @test @checked(i - T(1)) == @unchecked(i - T(1)) == i - T(1)
+        @testset "$T subtraction" begin
+            for i ∈ typemin(T) + T(1):typemax(T)
+                @test @checked(i - T(1)) == @unchecked(i - T(1)) == i - T(1)
+            end
         end
-    end
-    @testset "multiplication" begin
-        for i ∈ typemin(T) ÷ T(2):typemax(T) ÷ T(2)
-            @test @checked(2i) == @unchecked(2i) == 2i
+        @testset "$T multiplication" begin
+            for i ∈ typemin(T) ÷ T(2):typemax(T) ÷ T(2)
+                @test @checked(2i) == @unchecked(2i) == 2i
+            end
         end
-    end
-    @testset "power" begin
-        for i ∈ ceil(T, -√(typemax(T))):floor(T, √(typemax(T)))
-            @test @checked(i ^ 2) == @unchecked(i ^ 2) == i ^ 2
+        @testset "$T power" begin
+            for i ∈ ceil(T, -√(typemax(T))):floor(T, √(typemax(T)))
+                @test @checked(i ^ 2) == @unchecked(i ^ 2) == i ^ 2
+            end
         end
-    end
-    @testset "abs" begin
-        for i ∈ typemin(T) + T(1):typemax(T)
-            @test @checked(abs(i)) == @unchecked(abs(i)) == abs(i)
+        @testset "$T abs" begin
+            for i ∈ typemin(T) + T(1):typemax(T)
+                @test @checked(abs(i)) == @unchecked(abs(i)) == abs(i)
+            end
         end
     end
 end
@@ -162,7 +163,7 @@ end
     @test unchecked_negsub(1, 2) == 1 - 2
 end
 
-@testset "in-place assignement" begin
+@testset "assignment operators" begin
     a = typemax(Int)
     @test_throws OverflowError @checked a += 1
     @unchecked a += 1
@@ -185,15 +186,15 @@ end
 end
 
 @checked begin
-    fooplus(x, y) = x + y
-    foominus(x, y) = x - y
+    checkplus(x, y) = x + y
+    checkminus(x, y) = x - y
 end
 
 @testset "rewrite inside block body" begin
-    @test fooplus(0x10, 0x20) === 0x30
-    @test_throws OverflowError fooplus(0xf0, 0x20)
-    @test foominus(0x30, 0x20) === 0x10
-    @test_throws OverflowError foominus(0x20, 0x30)
+    @test checkplus(0x10, 0x20) === 0x30
+    @test_throws OverflowError checkplus(0xf0, 0x20)
+    @test checkminus(0x30, 0x20) === 0x10
+    @test_throws OverflowError checkminus(0x20, 0x30)
 end
 
 module CheckedModule
