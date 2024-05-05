@@ -56,9 +56,11 @@ end
 
 @testset "exhaustive checks over 16 bit math" begin
     for T ∈ (Int16, UInt16)
-        @testset "$T negation" begin
-            for i ∈ typemin(T) + T(1):typemax(T)
-                @test @checked(-i) == @unchecked(-i) == -i
+        if T <: Signed
+            @testset "$T negation" begin
+                for i ∈ typemin(T) + T(1):typemax(T)
+                    @test @checked(-i) == @unchecked(-i) == -i
+                end
             end
         end
         @testset "$T addition" begin
@@ -77,8 +79,14 @@ end
             end
         end
         @testset "$T power" begin
-            for i ∈ ceil(T, -√(typemax(T))):floor(T, √(typemax(T)))
-                @test @checked(i ^ 2) == @unchecked(i ^ 2) == i ^ 2
+            if T <: Signed
+                for i ∈ ceil(T, -√(typemax(T))):floor(T, √(typemax(T)))
+                    @test @checked(i ^ 2) == @unchecked(i ^ 2) == i ^ 2
+                end
+            else
+                for i ∈ T(0):floor(T, √(typemax(T)))
+                    @test @checked(i ^ 2) == @unchecked(i ^ 2) == i ^ 2
+                end
             end
         end
         @testset "$T abs" begin
