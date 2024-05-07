@@ -375,8 +375,49 @@ end
         end))
 end
 
+@testset "default methods warn if default is changed" begin    
+    (@__MODULE__).eval(:(
+        module WarnOnDefaultChangedCheckedModule
+            using OverflowContexts, Test
+            @default_unchecked
+            @test_logs (:warn, "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default.") @default_checked
+        end))
+    
+    (@__MODULE__).eval(:(
+        module WarnOnDefaultChangedUncheckedModule
+            using OverflowContexts, Test
+            @default_unchecked
+            @test_logs (:warn, "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default.") @default_checked
+        end))
+end
+
 @testset "ensure pow methods don't promote on the power" begin
     @test typeof(@checked 3 ^ UInt(4)) == Int
     @test typeof(@unchecked 3 ^ UInt(4)) == Int
     @test typeof(@saturating 3 ^ UInt(4)) == Int
+end
+
+@testset "multiargument methods" begin
+    @test @checked(1 + 4 + 5) == 10
+    @test_throws OverflowError @checked(typemax(Int) + 1 + 4 + 5)
+    @test_throws OverflowError @checked(1 + 4 + 5 + typemax(Int))
+    @test @checked(1.0 + 4 + 5 + typemax(Int)) == 9.223372036854776e18
+    
+    @test @unchecked(1 + 4 + 5) == 10
+    @test @unchecked(typemax(Int) + 1 + 4 + 5) == 10 + typemax(Int)
+    @test @unchecked(1 + 4 + 5 + typemax(Int)) == 10 + typemax(Int)
+    @test @checked(1.0 + 4 + 5 + typemax(Int)) == 9.223372036854776e18
+end
+
+using SaferIntegers
+
+@testset "Ensure SaferIntegers are still safer" begin
+    @test_throws OverflowError typemax(SafeInt) + 1
+    @test_throws OverflowError @unchecked typemax(SafeInt) + 1
+    (@__MODULE__).eval(:(
+        module UncheckedDefaultSaferIntStillChecksModule
+            using OverflowContexts, SaferIntegers, Test
+            @default_unchecked
+            @test_throws OverflowError typemax(SafeInt) + 1
+        end))
 end
