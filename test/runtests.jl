@@ -288,3 +288,16 @@ end
     @test @unchecked(1 + 4 + 5 + typemax(Int)) == 10 + typemax(Int)
     @test @checked(1.0 + 4 + 5 + typemax(Int)) == 9.223372036854776e18
 end
+
+using SaferIntegers
+
+@testset "Ensure SaferIntegers are still safer" begin
+    @test_throws OverflowError typemax(SafeInt) + 1
+    @test_throws OverflowError @unchecked typemax(SafeInt) + 1
+    (@__MODULE__).eval(:(
+        module UncheckedDefaultSaferIntStillChecksModule
+            using OverflowContexts, SaferIntegers, Test
+            @default_unchecked
+            @test_throws OverflowError typemax(SafeInt) + 1
+        end))
+end
