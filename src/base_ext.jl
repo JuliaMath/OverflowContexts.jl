@@ -1,11 +1,12 @@
-import Base: promote, afoldl, @_inline_meta
-import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs  
+import Base: BitInteger, promote, afoldl, @_inline_meta
+import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs,
+    add_with_overflow, sub_with_overflow, mul_with_overflow
 
 if VERSION ≥ v"1.11-alpha"
-    import Base.Checked: checked_pow
+    import Base.Checked: checked_pow, pow_with_overflow
 else
-    import Base: BitInteger, throw_domerr_powbysq, to_power_type
-    import Base.Checked: mul_with_overflow, throw_overflowerr_binaryop
+    import Base: throw_domerr_powbysq, to_power_type
+    import Base.Checked: throw_overflowerr_binaryop
 end
 
 # The Base methods have unchecked semantics, so just pass through
@@ -21,31 +22,22 @@ unchecked_abs(x...) = Base.abs(x...)
 checked_add(a, b, c, xs...) = @checked (@_inline_meta; afoldl(+, (+)((+)(a, b), c), xs...))
 checked_sub(a, b, c, xs...) = @checked (@_inline_meta; afoldl(-, (-)((-)(a, b), c), xs...))
 checked_mul(a, b, c, xs...) = @checked (@_inline_meta; afoldl(*, (*)((*)(a, b), c), xs...))
+
 saturating_add(a, b, c, xs...) = @saturating (@_inline_meta; afoldl(+, (+)((+)(a, b), c), xs...))
 saturating_sub(a, b, c, xs...) = @saturating (@_inline_meta; afoldl(-, (-)((-)(a, b), c), xs...))
 saturating_mul(a, b, c, xs...) = @saturating (@_inline_meta; afoldl(*, (*)((*)(a, b), c), xs...))
 
-
-# passthrough for non-numbers
-unchecked_neg(x) = Base.:-(x)
-unchecked_add(x, y) = Base.:+(x, y)
-unchecked_sub(x, y) = Base.:-(x, y)
-unchecked_mul(x, y) = Base.:*(x, y)
-unchecked_pow(x, y) = Base.:^(x, y)
-unchecked_abs(x) = Base.abs(x)
-
-checked_neg(x) = Base.:-(x)
-checked_add(x, y) = Base.:+(x, y)
-checked_sub(x, y) = Base.:-(x, y)
-checked_mul(x, y) = Base.:*(x, y)
-checked_pow(x, y) = Base.:^(x, y)
-checked_abs(x) = Base.abs(x)
 
 # promote unmatched number types to same type
 checked_add(x::Number, y::Number) = checked_add(promote(x, y)...)
 checked_sub(x::Number, y::Number) = checked_sub(promote(x, y)...)
 checked_mul(x::Number, y::Number) = checked_mul(promote(x, y)...)
 checked_pow(x::Number, y::Number) = checked_pow(promote(x, y)...)
+
+saturating_add(x::Number, y::Number) = saturating_add(promote(x, y)...)
+saturating_sub(x::Number, y::Number) = saturating_sub(promote(x, y)...)
+saturating_mul(x::Number, y::Number) = saturating_mul(promote(x, y)...)
+saturating_pow(x::Number, y::Number) = saturating_pow(promote(x, y)...)
 
 
 # fallback to `unchecked_` for `Number` types that don't have more specific `checked_` methods
@@ -56,10 +48,12 @@ checked_mul(x::T, y::T) where T <: Number = unchecked_mul(x, y)
 checked_pow(x::T, y::T) where T <: Number = unchecked_pow(x, y)
 checked_abs(x::T) where T <: Number = unchecked_abs(x)
 
-saturating_add(x::T, y::T) where T <: Number = Base.:+(x, y)
-saturating_sub(x::T, y::T) where T <: Number = Base.:-(x, y)
-saturating_mul(x::T, y::T) where T <: Number = Base.:*(x, y)
-saturating_pow(x::T, y::T) where T <: Number = Base.:^(x, y)
+saturating_neg(x::T) where T <: Number = unchecked_neg(x)
+saturating_add(x::T, y::T) where T <: Number = unchecked_add(x, y)
+saturating_sub(x::T, y::T) where T <: Number = unchecked_sub(x, y)
+saturating_mul(x::T, y::T) where T <: Number = unchecked_mul(x, y)
+saturating_pow(x::T, y::T) where T <: Number = unchecked_pow(x, y)
+saturating_abs(x::T) where T <: Number = unchecked_abs(x)
 
 # fallback to `unchecked_` for non-`Number` types
 checked_neg(x) = unchecked_neg(x)
@@ -107,6 +101,7 @@ function saturating_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger}
     end
     return result
 end
+const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
 saturating_abs(x::T) where T <: SignedBitInteger = x == typemin(T) ? typemax(T) : flipsign(x, x)
 
 if VERSION < v"1.11"

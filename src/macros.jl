@@ -57,14 +57,19 @@ Redirect default integer math to saturating operators for the current module. On
 """
 macro default_saturating()
     quote
-        any(Base.isbindingresolved.(Ref(@__MODULE__), (:+, :-, :*, :^, :abs))) &&
-            error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        if !isdefined(@__MODULE__, :__OverflowContextDefaultSet)
+            any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
+                error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        else
+            @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
+        end
         (@__MODULE__).eval(:(-(x) = OverflowContexts.saturating_neg(x)))
         (@__MODULE__).eval(:(+(x...) = OverflowContexts.saturating_add(x...)))
         (@__MODULE__).eval(:(-(x...) = OverflowContexts.saturating_sub(x...)))
         (@__MODULE__).eval(:(*(x...) = OverflowContexts.saturating_mul(x...)))
         (@__MODULE__).eval(:(^(x...) = OverflowContexts.saturating_pow(x...)))
         (@__MODULE__).eval(:(abs(x) = OverflowContexts.saturating_abs(x)))
+        (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
     end
 end
