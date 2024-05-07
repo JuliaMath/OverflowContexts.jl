@@ -56,3 +56,11 @@ a()  # -9223372036854775808
 a = typemax(Int)
 @checked a += 1
 ```
+
+If you are implementing your own numeric types, this package should just work for you so long as you extend the Base operators and the Base.Checked `checked_` methods.
+
+## Related Packages
+
+* [CheckedArithmetic.jl](https://github.com/JuliaMath/CheckedArithmetic.jl) - Predescessor to this package with more limited functionality, but also provides a utility to promote types for safer accumulators.
+* [SaferIntegers.jl](https://github.com/JeffreySarnoff/SaferIntegers.jl) - Uses the type system to
+enforce overflow checking even in code you don't control.
