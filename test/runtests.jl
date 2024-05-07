@@ -261,14 +261,14 @@ end
         module WarnOnDefaultChangedCheckedModule
             using OverflowContexts, Test
             @default_unchecked
-            @test_warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default." @default_checked
+            @test_logs (:warn, "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default.") @default_checked
         end))
     
     (@__MODULE__).eval(:(
         module WarnOnDefaultChangedUncheckedModule
             using OverflowContexts, Test
             @default_unchecked
-            @test_warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default." @default_checked
+            @test_logs (:warn, "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default.") @default_checked
         end))
 end
 
