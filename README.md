@@ -7,14 +7,14 @@ This package conceptually extends `CheckedArithmetic.jl` to provide the followin
 Together, these provide checked and unchecked contexts, as in other languages like C#:
 https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/checked-and-unchecked
 
-`@default_checked` and `@default_unchecked` create shadow copies of the `+`, `-`, `*`, `^`, and `abs` functions that redirect to overflow-checked
-or overflow-permissive operations, respectively, within the module it was executed in. All non-integer arguments are passed through to their
-respective Base methods. **Important:** If you wish to use this feature, the first usage of this macro must occur earlier than the first usage of the affected Base functions. This is not necessary to use the expression-level macros.
-
 The expression-level `@checked` and `@unchecked` rewrite instances of `+`, `-`, `*`, `^`, and `abs` functions, to functions specific to the
 checked or permissive operation, and thus are not affected by switching the default. Symbols for the functions will also be replaced, to support
 calls like `foldl(+, v)`. If these macros are nested, the lowest level takes precedence so that an unchecked context can be nested inside a checked
 context and vice versa.
+
+`@default_checked` and `@default_unchecked` create shadow copies of the `+`, `-`, `*`, `^`, and `abs` functions that redirect to overflow-checked
+or overflow-permissive operations, respectively, within the module it was executed in. All non-integer arguments are passed through to their
+respective Base methods. **Important:** If you wish to use this feature, the first usage of this macro must occur earlier than the first usage of the affected Base functions, and it should probably only be set once per module. This is not necessary to use the expression-level macros.
 
 ```julia
 using OverflowContexts
@@ -54,7 +54,7 @@ a()  # -9223372036854775808
 
 # assignment operators
 a = typemax(Int)
-@checked a += 1
+@checked a += 1 # OverflowError: 9223372036854775807 + 1 overflowed for type Int64
 ```
 
 If you are implementing your own numeric types, this package should just work for you so long as you extend the Base operators and the Base.Checked `checked_` methods.
