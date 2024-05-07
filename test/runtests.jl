@@ -259,3 +259,15 @@ end
     @test typeof(@unchecked 3 ^ UInt(4)) == Int
     @test typeof(@checked 3 ^ UInt(4)) == Int
 end
+
+@testset "multiargument methods" begin
+    @test @checked(1 + 4 + 5) == 10
+    @test_throws OverflowError @checked(typemax(Int) + 1 + 4 + 5)
+    @test_throws OverflowError @checked(1 + 4 + 5 + typemax(Int))
+    @test @checked(1.0 + 4 + 5 + typemax(Int)) == 9.223372036854776e18
+    
+    @test @unchecked(1 + 4 + 5) == 10
+    @test @unchecked(typemax(Int) + 1 + 4 + 5) == 10 + typemax(Int)
+    @test @unchecked(1 + 4 + 5 + typemax(Int)) == 10 + typemax(Int)
+    @test @checked(1.0 + 4 + 5 + typemax(Int)) == 9.223372036854776e18
+end

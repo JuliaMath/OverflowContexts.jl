@@ -1,69 +1,52 @@
-import Base: promote, neg_int, add_int, sub_int, mul_int, afoldl, @_inline_meta,
-    power_by_squaring, throw_domerr_powbysq, to_power_type
-import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs,
-    add_with_overflow, sub_with_overflow, mul_with_overflow, SignedInt,
-    throw_overflowerr_binaryop
+import Base: promote, afoldl, @_inline_meta
+import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs  
 
 if VERSION ≥ v"1.11-alpha"
     import Base.Checked: checked_pow
+else
+    import Base: BitInteger, throw_domerr_powbysq, to_power_type
+    import Base.Checked: mul_with_overflow, throw_overflowerr_binaryop
 end
 
-# convert multi-argument calls into nested two-argument calls
-unchecked_add(a, b, c, xs...) = @unchecked (@_inline_meta; afoldl(+, (+)((+)(a, b), c), xs...))
-unchecked_sub(a, b, c, xs...) = @unchecked (@_inline_meta; afoldl(-, (-)((-)(a, b), c), xs...))
-unchecked_mul(a, b, c, xs...) = @unchecked (@_inline_meta; afoldl(*, (*)((*)(a, b), c), xs...))
+# The Base methods have unchecked semantics, so just pass through
+unchecked_neg(x...) = Base.:-(x...)
+unchecked_add(x...) = Base.:+(x...)
+unchecked_sub(x...) = Base.:-(x...)
+unchecked_mul(x...) = Base.:*(x...)
+unchecked_pow(x...) = Base.:^(x...)
+unchecked_abs(x...) = Base.abs(x...)
 
+
+# convert multi-argument calls into nested two-argument calls
 checked_add(a, b, c, xs...) = @checked (@_inline_meta; afoldl(+, (+)((+)(a, b), c), xs...))
 checked_sub(a, b, c, xs...) = @checked (@_inline_meta; afoldl(-, (-)((-)(a, b), c), xs...))
 checked_mul(a, b, c, xs...) = @checked (@_inline_meta; afoldl(*, (*)((*)(a, b), c), xs...))
 
 
-# passthrough for non-numbers
-unchecked_neg(x) = Base.:-(x)
-unchecked_add(x, y) = Base.:+(x, y)
-unchecked_sub(x, y) = Base.:-(x, y)
-unchecked_mul(x, y) = Base.:*(x, y)
-unchecked_pow(x, y) = Base.:^(x, y)
-unchecked_abs(x) = Base.abs(x)
-
-checked_neg(x) = Base.:-(x)
-checked_add(x, y) = Base.:+(x, y)
-checked_sub(x, y) = Base.:-(x, y)
-checked_mul(x, y) = Base.:*(x, y)
-checked_pow(x, y) = Base.:^(x, y)
-checked_abs(x) = Base.abs(x)
-
 # promote unmatched number types to same type
-unchecked_add(x::Number, y::Number) = unchecked_add(promote(x, y)...)
-unchecked_sub(x::Number, y::Number) = unchecked_sub(promote(x, y)...)
-unchecked_mul(x::Number, y::Number) = unchecked_mul(promote(x, y)...)
-unchecked_pow(x::Number, y::Number) = unchecked_pow(promote(x, y)...)
-
 checked_add(x::Number, y::Number) = checked_add(promote(x, y)...)
 checked_sub(x::Number, y::Number) = checked_sub(promote(x, y)...)
 checked_mul(x::Number, y::Number) = checked_mul(promote(x, y)...)
 checked_pow(x::Number, y::Number) = checked_pow(promote(x, y)...)
 
 
-# passthrough for same-type numbers that aren't integers
-unchecked_add(x::T, y::T) where T <: Number = Base.:+(x, y)
-unchecked_sub(x::T, y::T) where T <: Number = Base.:-(x, y)
-unchecked_mul(x::T, y::T) where T <: Number = Base.:*(x, y)
-unchecked_pow(x::T, y::T) where T <: Number = Base.:^(x, y)
-
-checked_add(x::T, y::T) where T <: Number = Base.:+(x, y)
-checked_sub(x::T, y::T) where T <: Number = Base.:-(x, y)
-checked_mul(x::T, y::T) where T <: Number = Base.:*(x, y)
-checked_pow(x::T, y::T) where T <: Number = Base.:^(x, y)
+# fallback to `unchecked_` for `Number` types that don't have more specific `checked_` methods
+checked_neg(x::T) where T <: Number = unchecked_neg(x)
+checked_add(x::T, y::T) where T <: Number = unchecked_add(x, y)
+checked_sub(x::T, y::T) where T <: Number = unchecked_sub(x, y)
+checked_mul(x::T, y::T) where T <: Number = unchecked_mul(x, y)
+checked_pow(x::T, y::T) where T <: Number = unchecked_pow(x, y)
+checked_abs(x::T) where T <: Number = unchecked_abs(x)
 
 
-# core methods
-unchecked_neg(x::T) where T <: BitInteger = neg_int(x)
-unchecked_add(x::T, y::T) where T <: BitInteger = add_int(x, y)
-unchecked_sub(x::T, y::T) where T <: BitInteger = sub_int(x, y)
-unchecked_mul(x::T, y::T) where T <: BitInteger = mul_int(x, y)
-unchecked_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger} = power_by_squaring(x, y)
-unchecked_abs(x::T) where T <: SignedBitInteger = flipsign(x, x)
+# fallback to `unchecked_` for non-`Number` types
+checked_neg(x) = unchecked_neg(x)
+checked_add(x, y) = unchecked_add(x, y)
+checked_sub(x, y) = unchecked_sub(x, y)
+checked_mul(x, y) = unchecked_mul(x, y)
+checked_pow(x, y) = unchecked_pow(x, y)
+checked_abs(x) = unchecked_abs(x)
+
 
 if VERSION < v"1.11"
 # Base.Checked only gained checked powers in 1.11

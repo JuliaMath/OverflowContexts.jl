@@ -1,7 +1,4 @@
-import Base: BitInteger
 import Base.Meta: isexpr
-
-const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
 
 """
     @default_checked
@@ -12,12 +9,12 @@ macro default_checked()
     quote
         any(Base.isbindingresolved.(Ref(@__MODULE__), (:+, :-, :*, :^, :abs))) &&
             error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
-        (@__MODULE__).eval(:(-(x) = OverflowContexts.checked_neg(x)))
-        (@__MODULE__).eval(:(+(x...) = OverflowContexts.checked_add(x...)))
-        (@__MODULE__).eval(:(-(x...) = OverflowContexts.checked_sub(x...)))
-        (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
-        (@__MODULE__).eval(:(^(x...) = OverflowContexts.checked_pow(x...)))
-        (@__MODULE__).eval(:(abs(x) = OverflowContexts.checked_abs(x)))
+        (@__MODULE__).eval(:(-(x) = checked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = checked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = checked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = checked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = checked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = checked_abs(x)))
         nothing
     end
 end
@@ -31,12 +28,12 @@ macro default_unchecked()
     quote
         any(Base.isbindingresolved.(Ref(@__MODULE__), (:+, :-, :*, :^, :abs))) &&
             error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
-        (@__MODULE__).eval(:(-(x) = OverflowContexts.unchecked_neg(x)))
-        (@__MODULE__).eval(:(+(x...) = OverflowContexts.unchecked_add(x...)))
-        (@__MODULE__).eval(:(-(x...) = OverflowContexts.unchecked_sub(x...)))
-        (@__MODULE__).eval(:(*(x...) = OverflowContexts.unchecked_mul(x...)))
-        (@__MODULE__).eval(:(^(x...) = OverflowContexts.unchecked_pow(x...)))
-        (@__MODULE__).eval(:(abs(x) = OverflowContexts.unchecked_abs(x)))
+        (@__MODULE__).eval(:(-(x) = unchecked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = unchecked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = unchecked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = unchecked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = unchecked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = unchecked_abs(x)))
         nothing
     end
 end
