@@ -68,6 +68,7 @@ checked_abs(x) = unchecked_abs(x)
 # saturating implementations
 # widen/clamp reduces to a saturating intrinsic on LLVM for signed integers through 64 bits for +/-
 # for unsigned it does not right now (Julia 1.11), but it is still faster than using the with_overflow methods
+# But we don't want to widen into a BigInt, so we use the naive approach for Int128
 saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)
 saturating_add(x::T, y::T) where T <: BitInteger =
     clamp(widen(x) + widen(y), T)
