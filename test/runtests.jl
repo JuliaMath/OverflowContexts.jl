@@ -221,6 +221,7 @@ module UncheckedModule
     using OverflowContexts, Test
     @default_unchecked
     testfunc() = @test typemax(Int) + 1 == typemin(Int)
+
     module NestedCheckedModule
         using OverflowContexts, Test
         @default_checked
@@ -252,6 +253,22 @@ end
             using OverflowContexts, Test
             x = 1 + 1
             @test_throws ErrorException @default_unchecked
+        end))
+end
+
+@testset "default methods warn if default is changed" begin    
+    (@__MODULE__).eval(:(
+        module WarnOnDefaultChangedCheckedModule
+            using OverflowContexts, Test
+            @default_unchecked
+            @test_warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default." @default_checked
+        end))
+    
+    (@__MODULE__).eval(:(
+        module WarnOnDefaultChangedUncheckedModule
+            using OverflowContexts, Test
+            @default_unchecked
+            @test_warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default." @default_checked
         end))
 end
 

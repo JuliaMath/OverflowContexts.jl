@@ -1,5 +1,7 @@
 import Base.Meta: isexpr
 
+const op_method_symbols = (:+, :-, :*, :^, :abs)
+
 """
     @default_checked
 
@@ -7,14 +9,19 @@ Redirect default integer math to overflow-checked operators for the current modu
 """
 macro default_checked()
     quote
-        any(Base.isbindingresolved.(Ref(@__MODULE__), (:+, :-, :*, :^, :abs))) &&
-            error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        if !isdefined(@__MODULE__, :__OverflowContextDefaultSet)
+            any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
+                error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        else
+            @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
+        end
         (@__MODULE__).eval(:(-(x) = checked_neg(x)))
         (@__MODULE__).eval(:(+(x...) = checked_add(x...)))
         (@__MODULE__).eval(:(-(x...) = checked_sub(x...)))
         (@__MODULE__).eval(:(*(x...) = checked_mul(x...)))
         (@__MODULE__).eval(:(^(x...) = checked_pow(x...)))
         (@__MODULE__).eval(:(abs(x) = checked_abs(x)))
+        (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
     end
 end
@@ -26,14 +33,19 @@ Restore default integer math to overflow-permissive operators for the current mo
 """
 macro default_unchecked()
     quote
-        any(Base.isbindingresolved.(Ref(@__MODULE__), (:+, :-, :*, :^, :abs))) &&
-            error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        if !isdefined(@__MODULE__, :__OverflowContextDefaultSet)
+            any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
+                error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        else
+            @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
+        end
         (@__MODULE__).eval(:(-(x) = unchecked_neg(x)))
         (@__MODULE__).eval(:(+(x...) = unchecked_add(x...)))
         (@__MODULE__).eval(:(-(x...) = unchecked_sub(x...)))
         (@__MODULE__).eval(:(*(x...) = unchecked_mul(x...)))
         (@__MODULE__).eval(:(^(x...) = unchecked_pow(x...)))
         (@__MODULE__).eval(:(abs(x) = unchecked_abs(x)))
+        (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
     end
 end
