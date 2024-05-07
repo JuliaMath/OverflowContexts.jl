@@ -55,6 +55,7 @@ saturating_mul(x::T, y::T) where T <: Number = unchecked_mul(x, y)
 saturating_pow(x::T, y::T) where T <: Number = unchecked_pow(x, y)
 saturating_abs(x::T) where T <: Number = unchecked_abs(x)
 
+
 # fallback to `unchecked_` for non-`Number` types
 checked_neg(x) = unchecked_neg(x)
 checked_add(x, y) = unchecked_add(x, y)
@@ -64,6 +65,7 @@ checked_pow(x, y) = unchecked_pow(x, y)
 checked_abs(x) = unchecked_abs(x)
 
 
+# saturating implementations
 saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)
 function saturating_add(x::T, y::T) where T <: BitInteger
     result, overflow_flag = add_with_overflow(x, y)
