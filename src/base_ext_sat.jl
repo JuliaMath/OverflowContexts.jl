@@ -50,7 +50,7 @@ if VERSION ≥ v"1.5"
 else
     import Base.Checked: add_with_overflow, sub_with_overflow, mul_with_overflow
 
-    function saturating_add(x::T, y::T) where T <: Union{Int128, UInt128}
+    function saturating_add(x::T, y::T) where T <: BitInteger
         result, overflow_flag = add_with_overflow(x, y)
         if overflow_flag
             return sign(x) > 0 ?
@@ -60,7 +60,7 @@ else
         return result
     end
 
-    function saturating_sub(x::T, y::T) where T <: Union{Int128, UInt128}
+    function saturating_sub(x::T, y::T) where T <: BitInteger
         result, overflow_flag = sub_with_overflow(x, y)
         if overflow_flag
             return y > x ?
