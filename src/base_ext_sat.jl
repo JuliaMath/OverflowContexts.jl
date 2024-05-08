@@ -2,8 +2,9 @@
 
 saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)
 
-using Base: llvmcall
 if VERSION ≥ v"1.5"
+    using Base: llvmcall
+
     # These intrinsics were added in LLVM 8, which was first supported with Julia 1.5
     saturating_add(x::Int8, y::Int8) =
         ccall("llvm.sadd.sat.i8", llvmcall, Int8, (Int8, Int8), x, y)
