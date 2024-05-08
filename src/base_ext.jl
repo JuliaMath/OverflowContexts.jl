@@ -1,9 +1,9 @@
 import Base: BitInteger, promote, afoldl, @_inline_meta
 import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs,
-    add_with_overflow, sub_with_overflow, mul_with_overflow
+    mul_with_overflow
 
 if VERSION ≥ v"1.11-alpha"
-    import Base.Checked: checked_pow, pow_with_overflow
+    import Base.Checked: checked_pow
 else
     import Base: throw_domerr_powbysq, to_power_type
     import Base.Checked: throw_overflowerr_binaryop
@@ -64,76 +64,6 @@ checked_mul(x, y) = unchecked_mul(x, y)
 checked_pow(x, y) = unchecked_pow(x, y)
 checked_abs(x) = unchecked_abs(x)
 
-
-# saturating implementations
-saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)
-
-using Base: llvmcall
-saturating_add(x::Int8, y::Int8) =
-    ccall("llvm.sadd.sat.i8", llvmcall, Int8, (Int8, Int8), x, y)
-saturating_add(x::Int16, y::Int16) =
-    ccall("llvm.sadd.sat.i16", llvmcall, Int16, (Int16, Int16), x, y)
-saturating_add(x::Int32, y::Int32) =
-    ccall("llvm.sadd.sat.i32", llvmcall, Int32, (Int32, Int32), x, y)
-saturating_add(x::Int64, y::Int64) =
-    ccall("llvm.sadd.sat.i64", llvmcall, Int64, (Int64, Int64), x, y)
-saturating_add(x::Int128, y::Int128) =
-    ccall("llvm.sadd.sat.i128", llvmcall, Int128, (Int128, Int128), x, y)
-saturating_add(x::UInt8, y::UInt8) =
-    ccall("llvm.uadd.sat.i8", llvmcall, UInt8, (UInt8, UInt8), x, y)
-saturating_add(x::UInt16, y::UInt16) =
-    ccall("llvm.uadd.sat.i16", llvmcall, UInt16, (UInt16, UInt16), x, y)
-saturating_add(x::UInt32, y::UInt32) =
-    ccall("llvm.uadd.sat.i32", llvmcall, UInt32, (UInt32, UInt32), x, y)
-saturating_add(x::UInt64, y::UInt64) =
-    ccall("llvm.uadd.sat.i64", llvmcall, UInt64, (UInt64, UInt64), x, y)
-saturating_add(x::UInt128, y::UInt128) =
-    ccall("llvm.uadd.sat.i128", llvmcall, UInt128, (UInt128, UInt128), x, y)
-
-saturating_sub(x::Int8, y::Int8) =
-    ccall("llvm.ssub.sat.i8", llvmcall, Int8, (Int8, Int8), x, y)
-saturating_sub(x::Int16, y::Int16) =
-    ccall("llvm.ssub.sat.i16", llvmcall, Int16, (Int16, Int16), x, y)
-saturating_sub(x::Int32, y::Int32) =
-    ccall("llvm.ssub.sat.i32", llvmcall, Int32, (Int32, Int32), x, y)
-saturating_sub(x::Int64, y::Int64) =
-    ccall("llvm.ssub.sat.i64", llvmcall, Int64, (Int64, Int64), x, y)
-saturating_sub(x::Int128, y::Int128) =
-    ccall("llvm.ssub.sat.i128", llvmcall, Int128, (Int128, Int128), x, y)
-saturating_sub(x::UInt8, y::UInt8) =
-    ccall("llvm.usub.sat.i8", llvmcall, UInt8, (UInt8, UInt8), x, y)
-saturating_sub(x::UInt16, y::UInt16) =
-    ccall("llvm.usub.sat.i16", llvmcall, UInt16, (UInt16, UInt16), x, y)
-saturating_sub(x::UInt32, y::UInt32) =
-    ccall("llvm.usub.sat.i32", llvmcall, UInt32, (UInt32, UInt32), x, y)
-saturating_sub(x::UInt64, y::UInt64) =
-    ccall("llvm.usub.sat.i64", llvmcall, UInt64, (UInt64, UInt64), x, y)
-saturating_sub(x::UInt128, y::UInt128) =
-    ccall("llvm.usub.sat.i128", llvmcall, UInt128, (UInt128, UInt128), x, y)
-
-function saturating_mul(x::T, y::T) where T <: BitInteger
-    result, overflow_flag = mul_with_overflow(x, y)
-    if overflow_flag
-        return sign(x) == sign(y) ?
-            typemax(T) :
-            typemin(T)
-    end
-    return result
-end
-function saturating_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger}
-    result, overflow_flag = pow_with_overflow(x, y)
-    if overflow_flag
-        return sign(x) > 0 ?
-            typemax(T) :
-            typemin(T)
-    end
-    return result
-end
-const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
-function saturating_abs(x::T) where T <: SignedBitInteger 
-    result = flipsign(x, x)
-    return result < 0 ? typemax(T) : result
-end
 
 if VERSION < v"1.11"
 # Base.Checked only gained checked powers in 1.11
