@@ -79,10 +79,10 @@ function saturating_mul(x::T, y::T) where T <: BitInteger
     end
     return result
 end
-function saturating_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger}
-    result, overflow_flag = pow_with_overflow(x, y)
+function saturating_pow(x_::T, p::S) where {T <: BitInteger, S <: BitInteger}
+    result, overflow_flag = power_by_squaring(x_, p; mul = saturating_mul)
     if overflow_flag
-        return sign(x) > 0 ?
+        return sign(x_) > 0 ?
             typemax(T) :
             typemin(T)
     end

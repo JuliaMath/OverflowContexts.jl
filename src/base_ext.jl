@@ -68,50 +68,37 @@ checked_abs(x) = unchecked_abs(x)
 if VERSION < v"1.11"
 # Base.Checked only gained checked powers in 1.11
 
-function checked_pow(x::T, y::S) where {T <: BitInteger, S <: BitInteger}
-    @_inline_meta
-    z, b = pow_with_overflow(x, y)
-    b && throw_overflowerr_binaryop(:^, x, y)
-    z
-end
+checked_pow(x_::T, p::S) where {T <: BitInteger, S <: BitInteger} =
+    power_by_squaring(x_, p; mul = checked_mul)
 
-function pow_with_overflow(x_, p::Integer)
+Base.@assume_effects :terminates_locally function power_by_squaring(x_, p::Integer; mul=*)
     x = to_power_type(x_)
     if p == 1
-        return (copy(x), false)
+        return copy(x)
     elseif p == 0
-        return (one(x), false)
+        return one(x)
     elseif p == 2
-        return mul_with_overflow(x, x)
+        return mul(x, x)
     elseif p < 0
-        isone(x) && return (copy(x), false)
-        isone(-x) && return (iseven(p) ? one(x) : copy(x), false)
+        isone(x) && return copy(x)
+        isone(-x) && return iseven(p) ? one(x) : copy(x)
         throw_domerr_powbysq(x, p)
     end
     t = trailing_zeros(p) + 1
     p >>= t
-    b = false
     while (t -= 1) > 0
-        x, b1 = mul_with_overflow(x, x)
-        b |= b1
+        x = mul(x, x)
     end
     y = x
     while p > 0
         t = trailing_zeros(p) + 1
         p >>= t
         while (t -= 1) >= 0
-            x, b1 = mul_with_overflow(x, x)
-            b |= b1
+            x = mul(x, x)
         end
-        y, b1 = mul_with_overflow(y, x)
-        b |= b1
+        y = mul(y, x)
     end
-    return y, b
-end
-pow_with_overflow(x::Bool, p::Unsigned) = ((p==0) | x, false)
-function pow_with_overflow(x::Bool, p::Integer)
-    p < 0 && !x && throw_domerr_powbysq(x, p)
-    return (p==0) | x, false
+    return y
 end
 
 end
