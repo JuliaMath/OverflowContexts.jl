@@ -71,7 +71,8 @@ if VERSION < v"1.11"
 checked_pow(x_::T, p::S) where {T <: BitInteger, S <: BitInteger} =
     power_by_squaring(x_, p; mul = checked_mul)
 
-Base.@assume_effects :terminates_locally function power_by_squaring(x_, p::Integer; mul=*)
+# Base.@assume_effects :terminates_locally # present in Julia 1.11 code, but only supported from 1.8 on
+function power_by_squaring(x_, p::Integer; mul=*)
     x = to_power_type(x_)
     if p == 1
         return copy(x)
