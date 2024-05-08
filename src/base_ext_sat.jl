@@ -80,15 +80,8 @@ function saturating_mul(x::T, y::T) where T <: BitInteger
     end
     return result
 end
-function saturating_pow(x_::T, p::S) where {T <: BitInteger, S <: BitInteger}
-    result, overflow_flag = power_by_squaring(x_, p; mul = saturating_mul)
-    if overflow_flag
-        return sign(x_) > 0 ?
-            typemax(T) :
-            typemin(T)
-    end
-    return result
-end
+saturating_pow(x_::T, p::S) where {T <: BitInteger, S <: BitInteger} =
+    power_by_squaring(x_, p; mul = saturating_mul)
 const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
 function saturating_abs(x::T) where T <: SignedBitInteger 
     result = flipsign(x, x)
