@@ -1,3 +1,10 @@
+import Base: BitInteger
+import Base.Checked: mul_with_overflow
+
+if VERSION ≤ v"1.11-alpha"
+    import Base: power_by_squaring
+end
+
 # saturating implementations
 
 saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)
@@ -48,7 +55,7 @@ if VERSION ≥ v"1.5"
     saturating_sub(x::UInt128, y::UInt128) =
         ccall("llvm.usub.sat.i128", llvmcall, UInt128, (UInt128, UInt128), x, y)
 else
-    import Base.Checked: add_with_overflow, sub_with_overflow, mul_with_overflow
+    import Base.Checked: add_with_overflow, sub_with_overflow
 
     function saturating_add(x::T, y::T) where T <: BitInteger
         result, overflow_flag = add_with_overflow(x, y)

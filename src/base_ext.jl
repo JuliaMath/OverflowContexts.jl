@@ -3,6 +3,7 @@ import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked
     mul_with_overflow
 
 if VERSION ≥ v"1.11-alpha"
+    import Base: power_by_squaring
     import Base.Checked: checked_pow
 else
     import Base: throw_domerr_powbysq, to_power_type
