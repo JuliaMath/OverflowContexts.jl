@@ -60,7 +60,7 @@ end
     @test @saturating(typemax(UInt) * 2) == typemax(UInt)
 
     @test @saturating(typemax(Int) ^ 2) == typemax(Int)
-    @test @saturating(typemin(Int) ^ 2) == typemin(Int)
+    @test @saturating(typemin(Int) ^ 2) == typemax(Int)
     @test @saturating(typemax(UInt) ^ 2) == typemax(UInt)
 
     @test @saturating(abs(typemin(Int))) == typemax(Int)
