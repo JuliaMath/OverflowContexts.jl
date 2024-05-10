@@ -13,47 +13,20 @@ if VERSION ≥ v"1.5"
     using Base: llvmcall
 
     # These intrinsics were added in LLVM 8, which was first supported with Julia 1.5
-    saturating_add(x::Int8, y::Int8) =
-        ccall("llvm.sadd.sat.i8", llvmcall, Int8, (Int8, Int8), x, y)
-    saturating_add(x::Int16, y::Int16) =
-        ccall("llvm.sadd.sat.i16", llvmcall, Int16, (Int16, Int16), x, y)
-    saturating_add(x::Int32, y::Int32) =
-        ccall("llvm.sadd.sat.i32", llvmcall, Int32, (Int32, Int32), x, y)
-    saturating_add(x::Int64, y::Int64) =
-        ccall("llvm.sadd.sat.i64", llvmcall, Int64, (Int64, Int64), x, y)
-    saturating_add(x::Int128, y::Int128) =
-        ccall("llvm.sadd.sat.i128", llvmcall, Int128, (Int128, Int128), x, y)
-    saturating_add(x::UInt8, y::UInt8) =
-        ccall("llvm.uadd.sat.i8", llvmcall, UInt8, (UInt8, UInt8), x, y)
-    saturating_add(x::UInt16, y::UInt16) =
-        ccall("llvm.uadd.sat.i16", llvmcall, UInt16, (UInt16, UInt16), x, y)
-    saturating_add(x::UInt32, y::UInt32) =
-        ccall("llvm.uadd.sat.i32", llvmcall, UInt32, (UInt32, UInt32), x, y)
-    saturating_add(x::UInt64, y::UInt64) =
-        ccall("llvm.uadd.sat.i64", llvmcall, UInt64, (UInt64, UInt64), x, y)
-    saturating_add(x::UInt128, y::UInt128) =
-        ccall("llvm.uadd.sat.i128", llvmcall, UInt128, (UInt128, UInt128), x, y)
+    @generated function saturating_add(x::T, y::T) where T <: BitInteger
+        llvm_su = T <: Signed ? "s" : "u"
+        llvm_t = "i" * string(8sizeof(T))
+        llvm_intrinsic = "llvm.$(llvm_su)add.sat.$llvm_t"
+        :(ccall($llvm_intrinsic, llvmcall, $T, ($T, $T), x, y))
+    end
 
-    saturating_sub(x::Int8, y::Int8) =
-        ccall("llvm.ssub.sat.i8", llvmcall, Int8, (Int8, Int8), x, y)
-    saturating_sub(x::Int16, y::Int16) =
-        ccall("llvm.ssub.sat.i16", llvmcall, Int16, (Int16, Int16), x, y)
-    saturating_sub(x::Int32, y::Int32) =
-        ccall("llvm.ssub.sat.i32", llvmcall, Int32, (Int32, Int32), x, y)
-    saturating_sub(x::Int64, y::Int64) =
-        ccall("llvm.ssub.sat.i64", llvmcall, Int64, (Int64, Int64), x, y)
-    saturating_sub(x::Int128, y::Int128) =
-        ccall("llvm.ssub.sat.i128", llvmcall, Int128, (Int128, Int128), x, y)
-    saturating_sub(x::UInt8, y::UInt8) =
-        ccall("llvm.usub.sat.i8", llvmcall, UInt8, (UInt8, UInt8), x, y)
-    saturating_sub(x::UInt16, y::UInt16) =
-        ccall("llvm.usub.sat.i16", llvmcall, UInt16, (UInt16, UInt16), x, y)
-    saturating_sub(x::UInt32, y::UInt32) =
-        ccall("llvm.usub.sat.i32", llvmcall, UInt32, (UInt32, UInt32), x, y)
-    saturating_sub(x::UInt64, y::UInt64) =
-        ccall("llvm.usub.sat.i64", llvmcall, UInt64, (UInt64, UInt64), x, y)
-    saturating_sub(x::UInt128, y::UInt128) =
-        ccall("llvm.usub.sat.i128", llvmcall, UInt128, (UInt128, UInt128), x, y)
+    @generated function saturating_sub(x::T, y::T) where T <: BitInteger
+        llvm_su = T <: Signed ? "s" : "u"
+        llvm_t = "i" * string(8sizeof(T))
+        llvm_intrinsic = "llvm.$(llvm_su)sub.sat.$llvm_t"
+        :(ccall($llvm_intrinsic, llvmcall, $T, ($T, $T), x, y))
+    end
+
 else
     import Base.Checked: add_with_overflow, sub_with_overflow
 
