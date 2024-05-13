@@ -29,6 +29,13 @@ checked_sub(x::Number, y::Number) = checked_sub(promote(x, y)...)
 checked_mul(x::Number, y::Number) = checked_mul(promote(x, y)...)
 checked_pow(x::Number, y::Number) = checked_pow(promote(x, y)...)
 
+unsafe_div(x::Number, y::Number, args...) = unsafe_div(promote(x, y)..., args...)
+unsafe_fld(x::Number, y::Number) = unsafe_fld(promote(x, y)...)
+unsafe_cld(x::Number, y::Number) = unsafe_cld(promote(x, y)...)
+unsafe_rem(x::Number, y::Number, args...) = unsafe_rem(promote(x, y)..., args...)
+unsafe_mod(x::Number, y::Number) = unsafe_mod(promote(x, y)...)
+unsafe_divrem(x::Number, y::Number, args...) = unsafe_divrem(promote(x, y)..., args...)
+
 
 # fallback to `unchecked_` for `Number` types that don't have more specific `checked_` methods
 checked_neg(x::T) where T <: Number = unchecked_neg(x)
@@ -38,6 +45,12 @@ checked_mul(x::T, y::T) where T <: Number = unchecked_mul(x, y)
 checked_pow(x::T, y::T) where T <: Number = unchecked_pow(x, y)
 checked_abs(x::T) where T <: Number = unchecked_abs(x)
 
+unsafe_div(x::T, y::T, args...) where T <: Number = unsafe_div(x, y, args...)
+unsafe_fld(x::T, y::T) where T <: Number = unsafe_fld(x, y)
+unsafe_cld(x::T, y::T) where T <: Number = unsafe_cld(x, y)
+unsafe_rem(x::T, y::T, args...) where T <: Number = unsafe_rem(x, y, args...)
+unsafe_mod(x::T, y::T) where T <: Number = unsafe_mod(x, y)
+unsafe_divrem(x::T, y::T, args...) where T <: Number = unsafe_divrem(x, y, args...)
 
 # fallback to `unchecked_` for non-`Number` types
 checked_neg(x) = unchecked_neg(x)
@@ -47,6 +60,33 @@ checked_mul(x, y) = unchecked_mul(x, y)
 checked_pow(x, y) = unchecked_pow(x, y)
 checked_abs(x) = unchecked_abs(x)
 
+unsafe_div(x, y, args...) = unsafe_div(x, y, args...)
+unsafe_fld(x, y) = unsafe_fld(x, y)
+unsafe_cld(x, y) = unsafe_cld(x, y)
+unsafe_rem(x, y, args...) = unsafe_rem(x, y, args...)
+unsafe_mod(x, y) = unsafe_mod(x, y)
+unsafe_divrem(x, y, args...) = unsafe_divrem(x, y, args...)
+
+
+# unsafe div implementations
+unsafe_div(x::T, y::T) where T <: SignedBitInteger = Base.sdiv_int(x, y)
+unsafe_div(x::T, y::T) where T <: UnsignedBitInteger = Base.udiv_int(x, y)
+unsafe_div(a::T, b::T, ::typeof(RoundToZero)) where T <: BitInteger = unsafe_div(a, b)
+unsafe_div(x::T, y::T, ::typeof(RoundDown)) where T <: UnsignedBitInteger = unsafe_div(x, y)
+function unsafe_div(x::T, y::T, ::typeof(RoundDown)) where T<:BitInteger
+    d = unsafe_div(x, y, RoundToZero)
+    return d - (signbit(x ⊻ y) & (d * y != x))
+end
+function unsafe_div(x::T, y::T, ::typeof(RoundUp)) where T <: SignedBitInteger
+    d = unsafe_div(x, y, RoundToZero)
+    return d + (((x > 0) == (y > 0)) & (d * y != x))
+end
+function unsafe_div(x::T, y::T, ::typeof(RoundUp)) where T <: UnsignedBitInteger
+    d = unsafe_div(x, y, RoundToZero)
+    return d + (d * y != x)
+end
+unsafe_fld(a::T, b::T) where T <: BitInteger = unsafe_div(a, b, RoundDown)
+unsafe_cld(a::T, b::T) where T <: BitInteger = unsafe_div(a, b, RoundUp)
 
 if VERSION < v"1.11"
 # Base.Checked only gained checked powers in 1.11

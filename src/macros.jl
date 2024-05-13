@@ -61,6 +61,13 @@ macro unchecked(expr)
     return esc(replace_op!(expr, op_unchecked))
 end
 
+macro unchecked(mode::Symbol, expr)
+    mode === :unsafe_div || throw(ArgumentError("Unrecognized mode $mode"))
+    isa(expr, Expr) || return expr
+    expr = unchecked(expr)
+    return esc(replace_op!(expr, op_unsafe_div))
+end
+
 """
     @checked expr
 
@@ -98,6 +105,17 @@ const op_unchecked = Dict(
     :*= => :(unchecked_mul),
     :^= => :(unchecked_pow),
     :abs => :(unchecked_abs)
+)
+
+const op_unsafe_div = Dict(
+    Symbol("÷") => :(unsafe_div),
+    :div => :(unsafe_div),
+    :fld => :(unsafe_fld),
+    :cld => :(unsafe_cld),
+    :rem => :(unsafe_rem),
+    :% => :(unsafe_mod),
+    :mod => :(unsafe_mod),
+    :divrem => :(unsafe_divrem)
 )
 
 # resolve ambiguity when `-` used as symbol
