@@ -60,18 +60,16 @@ checked_mul(x, y) = unchecked_mul(x, y)
 checked_pow(x, y) = unchecked_pow(x, y)
 checked_abs(x) = unchecked_abs(x)
 
-unsafe_div(x, y, args...) = unsafe_div(x, y, args...)
-unsafe_fld(x, y) = unsafe_fld(x, y)
-unsafe_cld(x, y) = unsafe_cld(x, y)
-unsafe_rem(x, y, args...) = unsafe_rem(x, y, args...)
-unsafe_mod(x, y) = unsafe_mod(x, y)
-unsafe_divrem(x, y, args...) = unsafe_divrem(x, y, args...)
-
 
 # unsafe div implementations
+const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
+const UnsignedBitInteger = Union{UInt8, UInt16, UInt32, UInt64, UInt128}
+const RoundNearestModes = Union{typeof(RoundNearest), typeof(RoundNearestTiesAway), typeof(RoundNearestTiesUp)}
 unsafe_div(x::T, y::T) where T <: SignedBitInteger = Base.sdiv_int(x, y)
 unsafe_div(x::T, y::T) where T <: UnsignedBitInteger = Base.udiv_int(x, y)
-unsafe_div(a::T, b::T, ::typeof(RoundToZero)) where T <: BitInteger = unsafe_div(a, b)
+unsafe_div(x::T, y::T, ::typeof(RoundToZero)) where T <: BitInteger = unsafe_div(x, y)
+unsafe_div(x::T, y::T, ::typeof(RoundFromZero)) where T <: BitInteger =
+    signbit(x) == signbit(y) ? unsafe_div(x, y, RoundUp) : unsafe_div(x, y, RoundDown)
 unsafe_div(x::T, y::T, ::typeof(RoundDown)) where T <: UnsignedBitInteger = unsafe_div(x, y)
 function unsafe_div(x::T, y::T, ::typeof(RoundDown)) where T<:BitInteger
     d = unsafe_div(x, y, RoundToZero)
@@ -85,8 +83,74 @@ function unsafe_div(x::T, y::T, ::typeof(RoundUp)) where T <: UnsignedBitInteger
     d = unsafe_div(x, y, RoundToZero)
     return d + (d * y != x)
 end
-unsafe_fld(a::T, b::T) where T <: BitInteger = unsafe_div(a, b, RoundDown)
-unsafe_cld(a::T, b::T) where T <: BitInteger = unsafe_div(a, b, RoundUp)
+unsafe_div(x::T, y::T, rnd::RoundNearestModes) where T <: BitInteger = unsafe_divrem(x, y, rnd)[1]
+
+unsafe_fld(x::T, y::T) where T <: BitInteger = unsafe_div(x, y, RoundDown)
+unsafe_cld(x::T, y::T) where T <: BitInteger = unsafe_div(x, y, RoundUp)
+
+unsafe_rem(x::T, y::T) where T <: SignedBitInteger = Base.srem_int(x, y)
+unsafe_rem(x::T, y::T) where T <: UnsignedBitInteger = Base.urem_int(x, y)
+unsafe_rem(x::T, y::T, ::typeof(RoundToZero)) where T <: BitInteger = unsafe_rem(x, y)
+unsafe_rem(x::T, y::T, ::typeof(RoundFromZero)) where T <: BitInteger =
+    signbit(x) == signbit(y) ? unsafe_rem(x, y, RoundUp) : unsafe_rem(x, y, RoundDown)
+unsafe_rem(x::T, y::T, ::typeof(RoundDown)) where T <: BitInteger = unsafe_mod(x, y)
+unsafe_rem(x::T, y::T, ::typeof(RoundUp)) where T <: BitInteger = unsafe_mod(x, -y)
+unsafe_rem(x::T, y::T, rnd::RoundNearestModes) where T <: BitInteger = unsafe_divrem(x, y, rnd)[2]
+
+unsafe_mod(x::T, y::T) where T <: BitInteger = x - unsafe_fld(x, y) * y
+
+unsafe_divrem(x::T, y::T) where T <: BitInteger = (unsafe_div(x, y), unsafe_rem(x, y))
+unsafe_divrem(x::T, y::T, rnd::RoundingMode) where T <: BitInteger = (unsafe_div(x, y, rnd), unsafe_rem(x, y, rnd))
+# copied from Base with modifications
+function unsafe_divrem(x::Integer, y::Integer, ::typeof(RoundNearest))
+    (q, r) = unsafe_divrem(x, y)
+    if x >= 0
+        if y >= 0
+            r >=        (y÷2) + (isodd(y) | iseven(q)) ? (q+true, r-y) : (q, r)
+        else
+            r >=       -(y÷2) + (isodd(y) | iseven(q)) ? (q-true, r+y) : (q, r)
+        end
+    else
+        if y >= 0
+            r <= -signed(y÷2) - (isodd(y) | iseven(q)) ? (q-true, r+y) : (q, r)
+        else
+            r <=        (y÷2) - (isodd(y) | iseven(q)) ? (q+true, r-y) : (q, r)
+        end
+    end
+end
+function unsafe_divrem(x::Integer, y::Integer, ::typeof(RoundNearestTiesAway))
+    (q, r) = unsafe_divrem(x, y)
+    if x >= 0
+        if y >= 0
+            r >=        (y÷2) + isodd(y) ? (q+true, r-y) : (q, r)
+        else
+            r >=       -(y÷2) + isodd(y) ? (q-true, r+y) : (q, r)
+        end
+    else
+        if y >= 0
+            r <= -signed(y÷2) - isodd(y) ? (q-true, r+y) : (q, r)
+        else
+            r <=        (y÷2) - isodd(y) ? (q+true, r-y) : (q, r)
+        end
+    end
+end
+function unsafe_divrem(x::Integer, y::Integer, ::typeof(RoundNearestTiesUp))
+    (q, r) = unsafe_divrem(x, y)
+    if x >= 0
+        if y >= 0
+            r >=        (y÷2) + isodd(y) ? (q+true, r-y) : (q, r)
+        else
+            r >=       -(y÷2) + true     ? (q-true, r+y) : (q, r)
+        end
+    else
+        if y >= 0
+            r <= -signed(y÷2) - true     ? (q-true, r+y) : (q, r)
+        else
+            r <=        (y÷2) - isodd(y) ? (q+true, r-y) : (q, r)
+        end
+    end
+end
+
 
 if VERSION < v"1.11"
 # Base.Checked only gained checked powers in 1.11
