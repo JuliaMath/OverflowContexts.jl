@@ -61,12 +61,17 @@ macro unchecked(expr)
     return esc(replace_op!(expr, op_unchecked))
 end
 
-macro unchecked(mode::Symbol, expr)
-    mode === :unsafe_div || throw(ArgumentError("Unrecognized mode $mode"))
+"""
+    @unsafe_div expr
+
+Perform all integer operations in `expr` using overflow-permissive arithmetic.
+"""
+macro unsafe_div(expr)
     isa(expr, Expr) || return expr
-    expr = unchecked(expr)
+    expr = copy(expr)
     return esc(replace_op!(expr, op_unsafe_div))
 end
+
 
 """
     @checked expr
