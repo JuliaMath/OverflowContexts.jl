@@ -1,4 +1,4 @@
-import Base.Meta: isexpr
+using Base.Meta: isexpr
 
 const op_method_symbols = (:+, :-, :*, :^, :abs)
 

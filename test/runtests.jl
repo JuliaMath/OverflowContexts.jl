@@ -334,4 +334,26 @@ end
     @test_throws OverflowError @checked aa .* bb
     @unchecked(copy(aa) .^ bb) == fill(1, 2)
     @test_throws OverflowError @checked aa .^ bb
+
+@testset "Elementwise array methods are replaced, and others throw" begin
+    aa = fill(typemax(Int), 2)
+    bb = fill(2, 2)
+    cc = fill(typemin(Int), 2)
+    dd = fill(typemax(Int), 2, 2)
+    @unchecked(+cc) == cc
+    @unchecked(-cc) == cc
+    @checked(+cc) == cc
+    @test_throws OverflowError @checked(-cc)
+    @unchecked(aa + bb) == fill(typemin(Int) + 1, 2)
+    @test_throws OverflowError @checked aa + bb
+    @unchecked(cc - bb) == fill(typemax(Int) - 1, 2)
+    @test_throws OverflowError @checked cc - bb
+    @unchecked(2aa) == fill(-2, 2)
+    @test_throws OverflowError @checked 2aa
+    @unchecked(aa * 2) == fill(-2, 2)
+    @test_throws OverflowError @checked aa * 2
+    @unchecked(aa * bb') == fill(-2, 2, 2)
+    @test_throws ErrorException @checked aa * bb'
+    @unchecked(dd ^ 2) == fill(2, 2, 2)
+    @test_throws ErrorException @checked dd ^ 2
 end
