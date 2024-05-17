@@ -318,6 +318,8 @@ end
     @test_throws OverflowError @checked aa .* bb
     @unchecked(aa .^ bb) == fill(1, 2)
     @test_throws OverflowError @checked aa .^ bb
+    @unchecked(abs.(cc)) == cc
+    @test_throws OverflowError @checked abs.(cc)
 end
 
 @testset "Broadcasted assignment operators replaced" begin

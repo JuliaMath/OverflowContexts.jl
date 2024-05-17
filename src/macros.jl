@@ -179,6 +179,9 @@ function replace_op!(expr::Expr, op_map::Dict)
         op = get(assignment_op_map, op, op)
         expr.head = startswith(string(op), ".") ? :.= : :(=) # is there a better test?
         expr.args[2] = replace_op!(Expr(:call, op, target, arg), op_map)
+    elseif isexpr(expr, :.) # broadcast function
+        op = expr.args[1]
+        expr.args[1] = get(op_map, op, op)
     elseif !isexpr(expr, :macrocall) || expr.args[1] ∉ (Symbol("@checked"), Symbol("@unchecked"))
         for a in expr.args
             if isa(a, Expr)
