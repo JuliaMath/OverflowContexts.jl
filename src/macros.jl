@@ -188,3 +188,7 @@ function replace_op!(expr::Expr, op_map::Dict)
     end
     return expr
 end
+
+if VERSION < v"1.6"
+    isexpr(expr, heads) = isexpr(expr, collect(heads))
+end
