@@ -79,10 +79,6 @@ const op_checked = Dict(
     :- => :(checked_sub),
     :* => :(checked_mul),
     :^ => :(checked_pow),
-    :+= => :(checked_add),
-    :-= => :(checked_sub),
-    :*= => :(checked_mul),
-    :^= => :(checked_pow),
     :abs => :(checked_abs),
 )
 
@@ -93,10 +89,6 @@ const op_unchecked = Dict(
     :- => :(unchecked_sub),
     :* => :(unchecked_mul),
     :^ => :(unchecked_pow),
-    :+= => :(unchecked_add),
-    :-= => :(unchecked_sub),
-    :*= => :(unchecked_mul),
-    :^= => :(unchecked_pow),
     :abs => :(unchecked_abs)
 )
 
@@ -139,7 +131,7 @@ function replace_op!(expr::Expr, op_map::Dict)
             else
                 expr.args[1] = op
             end
-        elseif op ∈ (:.+, :.-, :.*, :.^) # broadcast operators
+        elseif op ∈ keys(broadcast_op_map) # broadcast operators
             op = get(broadcast_op_map, op, op)
             expr.head = :.
             expr.args = [
