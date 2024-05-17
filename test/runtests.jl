@@ -315,3 +315,17 @@ end
     @unchecked(aa .^ bb) == fill(1, 2)
     @test_throws OverflowError @checked aa .^ bb
 end
+
+@testset "Broadcasted assignment operators replaced" begin
+    aa = fill(typemax(Int), 2)
+    bb = fill(2, 2)
+    cc = fill(typemin(Int), 2)
+    @unchecked(copy(aa) .+= bb) == fill(typemin(Int) + 1, 2)
+    @test_throws OverflowError @checked aa .+ bb
+    @unchecked(copy(cc) .-= bb) == fill(typemax(Int) - 1, 2)
+    @test_throws OverflowError @checked cc .- bb
+    @unchecked(copy(aa) .* bb) == fill(-2, 2)
+    @test_throws OverflowError @checked aa .* bb
+    @unchecked(copy(aa) .^ bb) == fill(1, 2)
+    @test_throws OverflowError @checked aa .^ bb
+end
