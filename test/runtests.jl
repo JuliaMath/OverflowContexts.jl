@@ -301,3 +301,17 @@ using SaferIntegers
             @test_throws OverflowError typemax(SafeInt) + 1
         end))
 end
+
+@testset "Broadcasted operators replaced" begin
+    aa = fill(typemax(Int), 2)
+    bb = fill(2, 2)
+    cc = fill(typemin(Int), 2)
+    @unchecked(aa .+ bb) == fill(typemin(Int) + 1, 2)
+    @test_throws OverflowError @checked aa .+ bb
+    @unchecked(cc .- bb) == fill(typemax(Int) - 1, 2)
+    @test_throws OverflowError @checked cc .- bb
+    @unchecked(aa .* bb) == fill(-2, 2)
+    @test_throws OverflowError @checked aa .* bb
+    @unchecked(aa .^ bb) == fill(1, 2)
+    @test_throws OverflowError @checked aa .^ bb
+end

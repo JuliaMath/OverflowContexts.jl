@@ -100,6 +100,13 @@ const op_unchecked = Dict(
     :abs => :(unchecked_abs)
 )
 
+const broadcast_op_map = Dict(
+    :.+ => :+,
+    :.- => :-,
+    :.* => :*,
+    :.^ => :^
+)
+
 # resolve ambiguity when `-` used as symbol
 unchecked_negsub(x) = unchecked_neg(x)
 unchecked_negsub(x, y) = unchecked_sub(x, y)
@@ -110,10 +117,10 @@ checked_negsub(x, y) = checked_sub(x, y)
 function replace_op!(expr::Expr, op_map::Dict)
     if isexpr(expr, :call)
         f, len = expr.args[1], length(expr.args)
-        op = isexpr(f, :.) ? f.args[2].value : f # handle module-scoped functions
-        if op === :+ && len == 2                 # unary +
+        op = isexpr(f, :.) ? f.args[2].value : f  # handle module-scoped functions
+        if op === :+ && len == 2                  # unary +
             # no action required
-        elseif op === :- && len == 2             # unary -
+        elseif op === :- && len == 2              # unary -
             op = get(op_map, Symbol("unary-"), op)
             if isexpr(f, :.)
                 f.args[2] = QuoteNode(op)
@@ -121,7 +128,13 @@ function replace_op!(expr::Expr, op_map::Dict)
             else
                 expr.args[1] = op
             end
-        else                                     # arbitrary call
+        elseif op ∈ (:.+, :.-, :.*, :.^) # broadcast operators
+            op = get(broadcast_op_map, op, op)
+            expr.head = :.
+            expr.args = [
+                get(op_map, op, op),
+                Expr(:tuple, expr.args[2:end]...)]
+        else                                      # arbitrary call
             op = get(op_map, op, op)
             if isexpr(f, :.)
                 f.args[2] = QuoteNode(op)
@@ -134,7 +147,7 @@ function replace_op!(expr::Expr, op_map::Dict)
             a = expr.args[i]
             if isa(a, Expr)
                 replace_op!(a, op_map)
-            elseif isa(a, Symbol)                 # operator as symbol function argument, e.g. `fold(+, ...)`
+            elseif isa(a, Symbol)                  # operator as symbol function argument, e.g. `fold(+, ...)`
                 op = if a == :-
                     get(op_map, Symbol("ambig-"), a)
                 else
@@ -146,7 +159,7 @@ function replace_op!(expr::Expr, op_map::Dict)
                 expr.args[i] = op
             end
         end
-    elseif isexpr(expr, (:+=, :-=, :*=, :^=))     # in-place operator
+    elseif isexpr(expr, (:+=, :-=, :*=, :^=))      # assignment operators
         target = expr.args[1]
         arg = expr.args[2]
         op = expr.head
