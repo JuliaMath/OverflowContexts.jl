@@ -79,10 +79,6 @@ const op_checked = Dict(
     :- => :(checked_sub),
     :* => :(checked_mul),
     :^ => :(checked_pow),
-    :+= => :(checked_add),
-    :-= => :(checked_sub),
-    :*= => :(checked_mul),
-    :^= => :(checked_pow),
     :abs => :(checked_abs),
 )
 
@@ -93,11 +89,25 @@ const op_unchecked = Dict(
     :- => :(unchecked_sub),
     :* => :(unchecked_mul),
     :^ => :(unchecked_pow),
-    :+= => :(unchecked_add),
-    :-= => :(unchecked_sub),
-    :*= => :(unchecked_mul),
-    :^= => :(unchecked_pow),
     :abs => :(unchecked_abs)
+)
+
+const broadcast_op_map = Dict(
+    :.+ => :+,
+    :.- => :-,
+    :.* => :*,
+    :.^ => :^
+)
+
+const assignment_op_map = Dict(
+    :+= => :+,
+    :-= => :-,
+    :*= => :*,
+    :^= => :^,
+    :.+= => :.+,
+    :.-= => :.-,
+    :.*= => :.*,
+    :.^= => :.^,
 )
 
 # resolve ambiguity when `-` used as symbol
@@ -110,10 +120,10 @@ checked_negsub(x, y) = checked_sub(x, y)
 function replace_op!(expr::Expr, op_map::Dict)
     if isexpr(expr, :call)
         f, len = expr.args[1], length(expr.args)
-        op = isexpr(f, :.) ? f.args[2].value : f # handle module-scoped functions
-        if op === :+ && len == 2                 # unary +
+        op = isexpr(f, :.) ? f.args[2].value : f  # handle module-scoped functions
+        if op === :+ && len == 2                  # unary +
             # no action required
-        elseif op === :- && len == 2             # unary -
+        elseif op === :- && len == 2              # unary -
             op = get(op_map, Symbol("unary-"), op)
             if isexpr(f, :.)
                 f.args[2] = QuoteNode(op)
@@ -121,7 +131,23 @@ function replace_op!(expr::Expr, op_map::Dict)
             else
                 expr.args[1] = op
             end
-        else                                     # arbitrary call
+        elseif op ∈ keys(broadcast_op_map)        # broadcast operators
+            op = get(broadcast_op_map, op, op)
+            if length(expr.args) == 2 # unary operator
+                if op == :-
+                    expr.head = :.
+                    expr.args = [
+                        get(op_map, Symbol("unary-"), op),
+                        Expr(:tuple, expr.args[2])]
+                end
+                # no action required for .+
+            else
+                expr.head = :.
+                expr.args = [
+                    get(op_map, op, op),
+                    Expr(:tuple, expr.args[2:end]...)]
+            end
+        else                                      # arbitrary call
             op = get(op_map, op, op)
             if isexpr(f, :.)
                 f.args[2] = QuoteNode(op)
@@ -134,7 +160,7 @@ function replace_op!(expr::Expr, op_map::Dict)
             a = expr.args[i]
             if isa(a, Expr)
                 replace_op!(a, op_map)
-            elseif isa(a, Symbol)                 # operator as symbol function argument, e.g. `fold(+, ...)`
+            elseif isa(a, Symbol)                  # operator as symbol function argument, e.g. `fold(+, ...)`
                 op = if a == :-
                     get(op_map, Symbol("ambig-"), a)
                 else
@@ -146,13 +172,16 @@ function replace_op!(expr::Expr, op_map::Dict)
                 expr.args[i] = op
             end
         end
-    elseif isexpr(expr, (:+=, :-=, :*=, :^=))     # in-place operator
+    elseif isexpr(expr, keys(assignment_op_map))   # assignment operators
         target = expr.args[1]
         arg = expr.args[2]
         op = expr.head
-        op = get(op_map, op, op)
-        expr.head = :(=)
-        expr.args[2] = Expr(:call, op, target, arg)
+        op = get(assignment_op_map, op, op)
+        expr.head = startswith(string(op), ".") ? :.= : :(=) # is there a better test?
+        expr.args[2] = replace_op!(Expr(:call, op, target, arg), op_map)
+    elseif isexpr(expr, :.) # broadcast function
+        op = expr.args[1]
+        expr.args[1] = get(op_map, op, op)
     elseif !isexpr(expr, :macrocall) || expr.args[1] ∉ (Symbol("@checked"), Symbol("@unchecked"))
         for a in expr.args
             if isa(a, Expr)
@@ -161,4 +190,9 @@ function replace_op!(expr::Expr, op_map::Dict)
         end
     end
     return expr
+end
+
+if VERSION < v"1.6"
+    import Base.Meta: isexpr
+    isexpr(expr, heads) = isexpr(expr, collect(heads))
 end
