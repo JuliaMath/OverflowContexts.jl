@@ -131,12 +131,22 @@ function replace_op!(expr::Expr, op_map::Dict)
             else
                 expr.args[1] = op
             end
-        elseif op ∈ keys(broadcast_op_map) # broadcast operators
+        elseif op ∈ keys(broadcast_op_map)        # broadcast operators
             op = get(broadcast_op_map, op, op)
-            expr.head = :.
-            expr.args = [
-                get(op_map, op, op),
-                Expr(:tuple, expr.args[2:end]...)]
+            if length(expr.args) == 2 # unary operator
+                if op == :-
+                    expr.head = :.
+                    expr.args = [
+                        get(op_map, Symbol("unary-"), op),
+                        Expr(:tuple, expr.args[2])]
+                end
+                # no action required for .+
+            else
+                expr.head = :.
+                expr.args = [
+                    get(op_map, op, op),
+                    Expr(:tuple, expr.args[2:end]...)]
+            end
         else                                      # arbitrary call
             op = get(op_map, op, op)
             if isexpr(f, :.)
