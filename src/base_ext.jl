@@ -1,11 +1,11 @@
-import Base: promote, afoldl, @_inline_meta
+using Base: promote, afoldl, @_inline_meta
 import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs  
 
 if VERSION ≥ v"1.11-alpha"
     import Base.Checked: checked_pow
 else
-    import Base: BitInteger, throw_domerr_powbysq, to_power_type
-    import Base.Checked: mul_with_overflow, throw_overflowerr_binaryop
+    using Base: BitInteger, throw_domerr_powbysq, to_power_type
+    using Base.Checked: mul_with_overflow, throw_overflowerr_binaryop
 end
 
 # The Base methods have unchecked semantics, so just pass through

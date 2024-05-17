@@ -1,3 +1,8 @@
+import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul
+if VERSION ≥ v"1.11-alpha"
+    import Base.Checked: checked_pow
+end
+
 checked_neg(A::AbstractArray) = Base.broadcast_preserving_zero_d(checked_neg, A)
 for f in (:checked_add, :checked_sub)
     @eval function ($f)(A::AbstractArray, B::AbstractArray)
