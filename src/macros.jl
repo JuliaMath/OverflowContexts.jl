@@ -193,5 +193,6 @@ function replace_op!(expr::Expr, op_map::Dict)
 end
 
 if VERSION < v"1.6"
+    import Base.Meta: isexpr
     isexpr(expr, heads) = isexpr(expr, collect(heads))
 end
