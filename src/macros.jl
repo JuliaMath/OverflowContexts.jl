@@ -107,6 +107,17 @@ const broadcast_op_map = Dict(
     :.^ => :^
 )
 
+const assignment_op_map = Dict(
+    :+= => :+,
+    :-= => :-,
+    :*= => :*,
+    :^= => :^,
+    :.+= => :.+,
+    :.-= => :.-,
+    :.*= => :.*,
+    :.^= => :.^,
+)
+
 # resolve ambiguity when `-` used as symbol
 unchecked_negsub(x) = unchecked_neg(x)
 unchecked_negsub(x, y) = unchecked_sub(x, y)
@@ -159,13 +170,13 @@ function replace_op!(expr::Expr, op_map::Dict)
                 expr.args[i] = op
             end
         end
-    elseif isexpr(expr, (:+=, :-=, :*=, :^=))      # assignment operators
+    elseif isexpr(expr, keys(assignment_op_map))   # assignment operators
         target = expr.args[1]
         arg = expr.args[2]
         op = expr.head
-        op = get(op_map, op, op)
-        expr.head = :(=)
-        expr.args[2] = Expr(:call, op, target, arg)
+        op = get(assignment_op_map, op, op)
+        expr.head = startswith(string(op), ".") ? :.= : :(=) # is there a better test?
+        expr.args[2] = replace_op!(Expr(:call, op, target, arg), op_map)
     elseif !isexpr(expr, :macrocall) || expr.args[1] ∉ (Symbol("@checked"), Symbol("@unchecked"))
         for a in expr.args
             if isa(a, Expr)
