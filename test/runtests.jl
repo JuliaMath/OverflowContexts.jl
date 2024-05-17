@@ -334,6 +334,7 @@ end
     @test_throws OverflowError @checked aa .* bb
     @unchecked(copy(aa) .^ bb) == fill(1, 2)
     @test_throws OverflowError @checked aa .^ bb
+end
 
 @testset "Elementwise array methods are replaced, and others throw" begin
     aa = fill(typemax(Int), 2)
