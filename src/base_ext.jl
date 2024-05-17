@@ -1,13 +1,13 @@
-import Base: BitInteger, promote, afoldl, @_inline_meta
-import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs,
-    mul_with_overflow
+using Base: BitInteger, promote, afoldl, @_inline_meta
+import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs  
+using Base.Checked: mul_with_overflow
 
 if VERSION ≥ v"1.11-alpha"
     import Base: power_by_squaring
     import Base.Checked: checked_pow
 else
-    import Base: throw_domerr_powbysq, to_power_type
-    import Base.Checked: throw_overflowerr_binaryop
+    using Base: throw_domerr_powbysq, to_power_type
+    using Base.Checked: throw_overflowerr_binaryop
 end
 
 # The Base methods have unchecked semantics, so just pass through
