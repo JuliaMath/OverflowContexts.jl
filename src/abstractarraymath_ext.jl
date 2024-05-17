@@ -22,7 +22,7 @@ checked_pow(A::AbstractArray, B::Number) = error("Checked matrix multiplication 
 # Compatibility with Julia 1.0 and 1.1
 if VERSION < v"1.2"
     if VERSION < v"1.1"
-        @inline materialize(bc::Base.Broadcast.Broadcasted) = copy(instantiate(bc))
+        @inline materialize(bc::Base.Broadcast.Broadcasted) = copy(Base.Broadcast.instantiate(bc))
     else
         using Base.Broadcast: materialize
     end
