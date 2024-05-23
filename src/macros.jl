@@ -51,14 +51,27 @@ macro default_unchecked()
 end
 
 """
-    @unchecked expr
+    @default_saturating
 
-Perform all integer operations in `expr` using overflow-permissive arithmetic.
+Redirect default integer math to saturating operators for the current module. Only works at top-level.
 """
-macro unchecked(expr)
-    isa(expr, Expr) || return expr
-    expr = copy(expr)
-    return esc(replace_op!(expr, op_unchecked))
+macro default_saturating()
+    quote
+        if !isdefined(@__MODULE__, :__OverflowContextDefaultSet)
+            any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
+                error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
+        else
+            @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
+        end
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.saturating_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.saturating_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.saturating_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.saturating_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.saturating_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.saturating_abs(x)))
+        (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
+        nothing
+    end
 end
 
 """
@@ -70,6 +83,28 @@ macro checked(expr)
     isa(expr, Expr) || return expr
     expr = copy(expr)
     return esc(replace_op!(expr, op_checked))
+end
+
+"""
+    @unchecked expr
+
+Perform all integer operations in `expr` using overflow-permissive arithmetic.
+"""
+macro unchecked(expr)
+    isa(expr, Expr) || return expr
+    expr = copy(expr)
+    return esc(replace_op!(expr, op_unchecked))
+end
+
+"""
+    @saturating expr
+
+Perform all integer operations in `expr` using saturating arithmetic.
+"""
+macro saturating(expr)
+    isa(expr, Expr) || return expr
+    expr = copy(expr)
+    return esc(replace_op!(expr, op_saturating))
 end
 
 const op_checked = Dict(
@@ -90,6 +125,16 @@ const op_unchecked = Dict(
     :* => :(unchecked_mul),
     :^ => :(unchecked_pow),
     :abs => :(unchecked_abs)
+)
+
+const op_saturating = Dict(
+    Symbol("unary-") => :(saturating_neg),
+    Symbol("ambig-") => :(saturating_negsub),
+    :+ => :(saturating_add),
+    :- => :(saturating_sub),
+    :* => :(saturating_mul),
+    :^ => :(saturating_pow),
+    :abs => :(saturating_abs)
 )
 
 const broadcast_op_map = Dict(
@@ -115,6 +160,8 @@ unchecked_negsub(x) = unchecked_neg(x)
 unchecked_negsub(x, y) = unchecked_sub(x, y)
 checked_negsub(x) = checked_neg(x)
 checked_negsub(x, y) = checked_sub(x, y)
+saturating_negsub(x) = saturating_neg(x)
+saturating_negsub(x, y) = saturating_sub(x, y)
 
 # copied from CheckedArithmetic.jl and modified it
 function replace_op!(expr::Expr, op_map::Dict)
@@ -182,7 +229,7 @@ function replace_op!(expr::Expr, op_map::Dict)
     elseif isexpr(expr, :.) # broadcast function
         op = expr.args[1]
         expr.args[1] = get(op_map, op, op)
-    elseif !isexpr(expr, :macrocall) || expr.args[1] ∉ (Symbol("@checked"), Symbol("@unchecked"))
+    elseif !isexpr(expr, :macrocall) || expr.args[1] ∉ (Symbol("@checked"), Symbol("@unchecked"), Symbol("@saturating"))
         for a in expr.args
             if isa(a, Expr)
                 replace_op!(a, op_map)
