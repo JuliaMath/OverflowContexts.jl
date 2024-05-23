@@ -1,4 +1,7 @@
 using OverflowContexts
+using OverflowContexts: checked_neg, checked_add, checked_sub, checked_mul, checked_pow, checked_negsub, checked_abs,
+    unchecked_neg, unchecked_add, unchecked_sub, unchecked_mul, unchecked_negsub, unchecked_pow, unchecked_abs,
+    saturating_neg, saturating_add, saturating_sub, saturating_mul, saturating_pow, saturating_negsub, saturating_abs
 using Test
 
 @test isempty(detect_ambiguities(OverflowContexts, Base, Core))
@@ -177,49 +180,49 @@ end
 
 @testset "symbol replacement" begin
     expr = @macroexpand @checked foldl(+, [])
-    @test expr.args[2] == :checked_add
+    @test expr.args[2] == :(OverflowContexts.checked_add)
 
     expr = @macroexpand @unchecked foldl(+, [])
-    @test expr.args[2] == :unchecked_add
+    @test expr.args[2] == :(OverflowContexts.unchecked_add)
 
     expr = @macroexpand @saturating foldl(+, [])
-    @test expr.args[2] == :saturating_add
+    @test expr.args[2] == :(OverflowContexts.saturating_add)
 
     expr = @macroexpand @checked foldl(-, [])
-    @test expr.args[2] == :checked_negsub
+    @test expr.args[2] == :(OverflowContexts.checked_negsub)
 
     expr = @macroexpand @unchecked foldl(-, [])
-    @test expr.args[2] == :unchecked_negsub
+    @test expr.args[2] == :(OverflowContexts.unchecked_negsub)
     
     expr = @macroexpand @saturating foldl(-, [])
-    @test expr.args[2] == :saturating_negsub
+    @test expr.args[2] == :(OverflowContexts.saturating_negsub)
 
     expr = @macroexpand @checked foldl(*, [])
-    @test expr.args[2] == :checked_mul
+    @test expr.args[2] == :(OverflowContexts.checked_mul)
 
     expr = @macroexpand @unchecked foldl(*, [])
-    @test expr.args[2] == :unchecked_mul
+    @test expr.args[2] == :(OverflowContexts.unchecked_mul)
 
     expr = @macroexpand @saturating foldl(*, [])
-    @test expr.args[2] == :saturating_mul
+    @test expr.args[2] == :(OverflowContexts.saturating_mul)
 
     expr = @macroexpand @checked foldl(^, [])
-    @test expr.args[2] == :checked_pow
+    @test expr.args[2] == :(OverflowContexts.checked_pow)
 
     expr = @macroexpand @unchecked foldl(^, [])
-    @test expr.args[2] == :unchecked_pow
+    @test expr.args[2] == :(OverflowContexts.unchecked_pow)
 
     expr = @macroexpand @saturating foldl(^, [])
-    @test expr.args[2] == :saturating_pow
+    @test expr.args[2] == :(OverflowContexts.saturating_pow)
 
     expr = @macroexpand @checked foldl(:abs, [])
-    @test expr.args[2] == :checked_abs
+    @test expr.args[2] == :(OverflowContexts.checked_abs)
 
     expr = @macroexpand @unchecked foldl(:abs, [])
-    @test expr.args[2] == :unchecked_abs
+    @test expr.args[2] == :(OverflowContexts.unchecked_abs)
 
     expr = @macroexpand @saturating foldl(:abs, [])
-    @test expr.args[2] == :saturating_abs
+    @test expr.args[2] == :(OverflowContexts.saturating_abs)
 end
 
 @testset "negsub helper methods dispatch correctly" begin

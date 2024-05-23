@@ -15,12 +15,12 @@ macro default_checked()
         else
             @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
         end
-        (@__MODULE__).eval(:(-(x) = checked_neg(x)))
-        (@__MODULE__).eval(:(+(x...) = checked_add(x...)))
-        (@__MODULE__).eval(:(-(x...) = checked_sub(x...)))
-        (@__MODULE__).eval(:(*(x...) = checked_mul(x...)))
-        (@__MODULE__).eval(:(^(x...) = checked_pow(x...)))
-        (@__MODULE__).eval(:(abs(x) = checked_abs(x)))
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.checked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.checked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.checked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.checked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.checked_abs(x)))
         (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
     end
@@ -39,12 +39,12 @@ macro default_unchecked()
         else
             @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
         end
-        (@__MODULE__).eval(:(-(x) = unchecked_neg(x)))
-        (@__MODULE__).eval(:(+(x...) = unchecked_add(x...)))
-        (@__MODULE__).eval(:(-(x...) = unchecked_sub(x...)))
-        (@__MODULE__).eval(:(*(x...) = unchecked_mul(x...)))
-        (@__MODULE__).eval(:(^(x...) = unchecked_pow(x...)))
-        (@__MODULE__).eval(:(abs(x) = unchecked_abs(x)))
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.unchecked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.unchecked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.unchecked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.unchecked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.unchecked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.unchecked_abs(x)))
         (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
     end
@@ -108,33 +108,33 @@ macro saturating(expr)
 end
 
 const op_checked = Dict(
-    Symbol("unary-") => :(checked_neg),
-    Symbol("ambig-") => :(checked_negsub),
-    :+ => :(checked_add),
-    :- => :(checked_sub),
-    :* => :(checked_mul),
-    :^ => :(checked_pow),
-    :abs => :(checked_abs),
+    Symbol("unary-") => :(OverflowContexts.checked_neg),
+    Symbol("ambig-") => :(OverflowContexts.checked_negsub),
+    :+ => :(OverflowContexts.checked_add),
+    :- => :(OverflowContexts.checked_sub),
+    :* => :(OverflowContexts.checked_mul),
+    :^ => :(OverflowContexts.checked_pow),
+    :abs => :(OverflowContexts.checked_abs),
 )
 
 const op_unchecked = Dict(
-    Symbol("unary-") => :(unchecked_neg),
-    Symbol("ambig-") => :(unchecked_negsub),
-    :+ => :(unchecked_add),
-    :- => :(unchecked_sub),
-    :* => :(unchecked_mul),
-    :^ => :(unchecked_pow),
-    :abs => :(unchecked_abs)
+    Symbol("unary-") => :(OverflowContexts.unchecked_neg),
+    Symbol("ambig-") => :(OverflowContexts.unchecked_negsub),
+    :+ => :(OverflowContexts.unchecked_add),
+    :- => :(OverflowContexts.unchecked_sub),
+    :* => :(OverflowContexts.unchecked_mul),
+    :^ => :(OverflowContexts.unchecked_pow),
+    :abs => :(OverflowContexts.unchecked_abs)
 )
 
 const op_saturating = Dict(
-    Symbol("unary-") => :(saturating_neg),
-    Symbol("ambig-") => :(saturating_negsub),
-    :+ => :(saturating_add),
-    :- => :(saturating_sub),
-    :* => :(saturating_mul),
-    :^ => :(saturating_pow),
-    :abs => :(saturating_abs)
+    Symbol("unary-") => :(OverflowContexts.saturating_neg),
+    Symbol("ambig-") => :(OverflowContexts.saturating_negsub),
+    :+ => :(OverflowContexts.saturating_add),
+    :- => :(OverflowContexts.saturating_sub),
+    :* => :(OverflowContexts.saturating_mul),
+    :^ => :(OverflowContexts.saturating_pow),
+    :abs => :(OverflowContexts.saturating_abs)
 )
 
 const broadcast_op_map = Dict(
