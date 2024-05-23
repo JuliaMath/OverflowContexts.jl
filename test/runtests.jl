@@ -413,11 +413,20 @@ using SaferIntegers
 
 @testset "Ensure SaferIntegers are still safer" begin
     @test_throws OverflowError typemax(SafeInt) + 1
+
     @test_throws OverflowError @unchecked typemax(SafeInt) + 1
+    @test_throws OverflowError @saturating typemax(SafeInt) + 1
+
     (@__MODULE__).eval(:(
         module UncheckedDefaultSaferIntStillChecksModule
             using OverflowContexts, SaferIntegers, Test
             @default_unchecked
+            @test_throws OverflowError typemax(SafeInt) + 1
+        end))
+    (@__MODULE__).eval(:(
+        module SaturatingDefaultSaferIntStillChecksModule
+            using OverflowContexts, SaferIntegers, Test
+            @default_saturating
             @test_throws OverflowError typemax(SafeInt) + 1
         end))
 end
@@ -426,34 +435,51 @@ end
     aa = fill(typemax(Int), 2)
     bb = fill(2, 2)
     cc = fill(typemin(Int), 2)
-    @unchecked(.+cc) == cc
-    @unchecked(.-cc) == cc
+
     @checked(.+cc) == cc
     @test_throws OverflowError @checked(.-cc)
-    @unchecked(aa .+ bb) == fill(typemin(Int) + 1, 2)
     @test_throws OverflowError @checked aa .+ bb
-    @unchecked(cc .- bb) == fill(typemax(Int) - 1, 2)
     @test_throws OverflowError @checked cc .- bb
-    @unchecked(aa .* bb) == fill(-2, 2)
     @test_throws OverflowError @checked aa .* bb
-    @unchecked(aa .^ bb) == fill(1, 2)
     @test_throws OverflowError @checked aa .^ bb
-    @unchecked(abs.(cc)) == cc
     @test_throws OverflowError @checked abs.(cc)
+
+    @unchecked(.+cc) == cc
+    @unchecked(.-cc) == cc
+    @unchecked(aa .+ bb) == fill(typemin(Int) + 1, 2)
+    @unchecked(cc .- bb) == fill(typemax(Int) - 1, 2)
+    @unchecked(aa .* bb) == fill(-2, 2)
+    @unchecked(aa .^ bb) == fill(1, 2)
+    @unchecked(abs.(cc)) == cc
+
+    @saturating(.+cc) == cc
+    @saturating(.-cc) == aa
+    @saturating(aa .+ bb) == aa
+    @saturating(cc .- bb) == cc
+    @saturating(aa .* bb) == aa
+    @saturating(aa .^ bb) == aa
+    @saturating(abs.(cc)) == aa
 end
 
 @testset "Broadcasted assignment operators replaced" begin
     aa = fill(typemax(Int), 2)
     bb = fill(2, 2)
     cc = fill(typemin(Int), 2)
-    @unchecked(copy(aa) .+= bb) == fill(typemin(Int) + 1, 2)
+    
     @test_throws OverflowError @checked aa .+ bb
-    @unchecked(copy(cc) .-= bb) == fill(typemax(Int) - 1, 2)
-    @test_throws OverflowError @checked cc .- bb
-    @unchecked(copy(aa) .* bb) == fill(-2, 2)
-    @test_throws OverflowError @checked aa .* bb
-    @unchecked(copy(aa) .^ bb) == fill(1, 2)
     @test_throws OverflowError @checked aa .^ bb
+    @test_throws OverflowError @checked cc .- bb
+    @test_throws OverflowError @checked aa .* bb
+
+    @unchecked(copy(aa) .+= bb) == fill(typemin(Int) + 1, 2)
+    @unchecked(copy(cc) .-= bb) == fill(typemax(Int) - 1, 2)
+    @unchecked(copy(aa) .* bb) == fill(-2, 2)
+    @unchecked(copy(aa) .^ bb) == fill(1, 2)
+
+    @saturating(copy(aa) .+= bb) == aa
+    @saturating(copy(cc) .-= bb) == cc
+    @saturating(copy(aa) .* bb) == aa
+    @saturating(copy(aa) .^ bb) == aa
 end
 
 @testset "Elementwise array methods are replaced, and others throw" begin
@@ -461,20 +487,31 @@ end
     bb = fill(2, 2)
     cc = fill(typemin(Int), 2)
     dd = fill(typemax(Int), 2, 2)
-    @unchecked(+cc) == cc
-    @unchecked(-cc) == cc
+
     @checked(+cc) == cc
     @test_throws OverflowError @checked(-cc)
-    @unchecked(aa + bb) == fill(typemin(Int) + 1, 2)
     @test_throws OverflowError @checked aa + bb
-    @unchecked(cc - bb) == fill(typemax(Int) - 1, 2)
     @test_throws OverflowError @checked cc - bb
-    @unchecked(2aa) == fill(-2, 2)
     @test_throws OverflowError @checked 2aa
-    @unchecked(aa * 2) == fill(-2, 2)
     @test_throws OverflowError @checked aa * 2
-    @unchecked(aa * bb') == fill(-2, 2, 2)
     @test_throws ErrorException @checked aa * bb'
-    @unchecked(dd ^ 2) == fill(2, 2, 2)
     @test_throws ErrorException @checked dd ^ 2
+
+    @unchecked(+cc) == cc
+    @unchecked(-cc) == cc
+    @unchecked(aa + bb) == fill(typemin(Int) + 1, 2)
+    @unchecked(cc - bb) == fill(typemax(Int) - 1, 2)
+    @unchecked(2aa) == fill(-2, 2)
+    @unchecked(aa * 2) == fill(-2, 2)
+    @unchecked(aa * bb') == fill(-2, 2, 2)
+    @unchecked(dd ^ 2) == fill(2, 2, 2)
+
+    @saturating(+cc) == cc
+    @saturating(-cc) == aa
+    @saturating(aa + bb) == aa
+    @saturating(cc - bb) == cc
+    @saturating(2aa) == aa
+    @saturating(aa * 2) == aa
+    @test_throws ErrorException @saturating aa * bb'
+    @test_throws ErrorException @saturating dd ^ 2
 end

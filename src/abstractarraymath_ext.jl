@@ -19,6 +19,19 @@ checked_mul(A::AbstractArray, B::AbstractArray) = error("Checked matrix multipli
 
 checked_pow(A::AbstractArray, B::Number) = error("Checked matrix multiplication is not available")
 
+saturating_neg(A::AbstractArray) = broadcast_preserving_zero_d(saturating_neg, A)
+for f in (:saturating_add, :saturating_sub)
+    @eval function ($f)(A::AbstractArray, B::AbstractArray)
+        promote_shape(A, B) # check size compatibility
+        broadcast_preserving_zero_d($f, A, B)
+    end
+end
+saturating_mul(A::Number, B::AbstractArray) = broadcast_preserving_zero_d(saturating_mul, B, A)
+saturating_mul(A::AbstractArray, B::Number) = broadcast_preserving_zero_d(saturating_mul, A, B)
+saturating_mul(A::AbstractArray, B::AbstractArray) = error("Saturating matrix multiplication is not available")
+
+saturating_pow(A::AbstractArray, B::Number) = error("Saturating matrix multiplication is not available")
+
 # Compatibility with Julia 1.0 and 1.1
 if VERSION < v"1.2"
     if VERSION < v"1.1"
