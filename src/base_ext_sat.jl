@@ -6,6 +6,7 @@ if VERSION ≤ v"1.11-alpha"
 end
 
 # saturating implementations
+const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
 
 saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)
 
@@ -53,16 +54,16 @@ end
 
 function saturating_mul(x::T, y::T) where T <: BitInteger
     result, overflow_flag = mul_with_overflow(x, y)
-    if overflow_flag
-        return sign(x) == sign(y) ?
+    return overflow_flag ?
+        (sign(x) == sign(y) ?
             typemax(T) :
-            typemin(T)
-    end
-    return result
+            typemin(T)) :
+        result
 end
+
 saturating_pow(x_::T, p::S) where {T <: BitInteger, S <: BitInteger} =
     power_by_squaring(x_, p; mul = saturating_mul)
-const SignedBitInteger = Union{Int8, Int16, Int32, Int64, Int128}
+
 function saturating_abs(x::T) where T <: SignedBitInteger 
     result = flipsign(x, x)
     return result < 0 ? typemax(T) : result
