@@ -83,22 +83,43 @@ end
     @test_throws DivideError @checked -2 ÷ 0
     @test_throws DivideError @checked 0 ÷ 0
     @test_throws DivideError @checked 2 ÷ 0
-    @test_throws DivideError @checked 0x02 ÷ 0x00
     @test_throws DivideError @checked 0x00 ÷ 0x00
+    @test_throws DivideError @checked 0x02 ÷ 0x00
 
     @test @unchecked(typemin(Int) ÷ -1) == typemin(Int)
     @test @unchecked(-2 ÷ 0) == 0
     @test @unchecked(0 ÷ 0) == 0
     @test @unchecked(2 ÷ 0) == 0
-    @test @unchecked(UInt(2) ÷ UInt(0)) == 0x00
     @test @unchecked(UInt(0) ÷ UInt(0)) == 0x00
+    @test @unchecked(UInt(2) ÷ UInt(0)) == 0x00
 
     @test @saturating(typemin(Int) ÷ -1) == typemax(Int)
     @test @saturating(-2 ÷ 0) == typemin(Int)
     @test @saturating(0 ÷ 0) == 0
     @test @saturating(2 ÷ 0) == typemax(Int)
-    @test @saturating(UInt(2) ÷ UInt(0)) == typemax(UInt)
     @test @saturating(UInt(0) ÷ UInt(0)) == UInt(0)
+    @test @saturating(UInt(2) ÷ UInt(0)) == typemax(UInt)
+
+    @test @checked(typemin(Int) % -1) == 0 # The intrinsic provides the correct result rather than erroring
+    @test_throws DivideError @checked -2 % 0
+    @test_throws DivideError @checked 0 % 0
+    @test_throws DivideError @checked 2 % 0
+    @test_throws DivideError @checked 0x00 % 0x00
+    @test_throws DivideError @checked 0x02 % 0x00
+
+    @test @unchecked(typemin(Int) % -1) == 0
+    @test @unchecked(-2 % 0) == -2
+    @test @unchecked(0 % 0) == 0
+    @test @unchecked(2 % 0) == 2
+    @test @unchecked(UInt(0) % UInt(0)) == 0x00
+    @test @unchecked(UInt(2) % UInt(0)) == 0x02
+
+    @test @saturating(typemin(Int) % -1) == 0
+    @test @saturating(-2 % 0) == 0
+    @test @saturating(0 % 0) == 0
+    @test @saturating(2 % 0) == 0
+    @test @saturating(UInt(0) % UInt(0)) == 0x00
+    @test @saturating(UInt(2) % UInt(0)) == 0x00
 end
 
 @testset "exhaustive checks over 16 bit math" begin
@@ -328,6 +349,23 @@ end
     @test a == typemax(Int)
     @unchecked a ^= 2
     @test a == 1
+end
+
+@testset "div/rem assignment operators" begin
+    a = typemin(Int)
+    @test_throws DivideError @checked a ÷= -1
+    @unchecked a ÷= -1
+    @test a == typemin(Int)
+    @saturating a ÷= -1
+    @test a == typemax(Int)
+
+    a = typemin(Int)
+    @test_throws DivideError @checked a %= 0
+    a = typemin(Int)
+    @unchecked a %= 0
+    @test a == typemin(Int)
+    @saturating a %= 0
+    @test a == 0
 end
 
 @checked begin

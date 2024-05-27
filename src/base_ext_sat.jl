@@ -101,14 +101,12 @@ function saturating_cld(x::T, y::T) where T <: UnsignedBitInteger
 end
 
 saturating_rem(x::T, y::T) where T <: SignedBitInteger =
-    (y == zero(T)) ?
-        x :
-        (y == -one(T)) ?
-            zero(T) :
-            Base.srem_int(x, y)
+    (y == zero(T) || y == -one(T)) ?
+        zero(T) :
+        Base.srem_int(x, y)
 saturating_rem(x::T, y::T) where T <: UnsignedBitInteger =
     (y == zero(T)) ?
-        x :
+        zero(T) :
         Base.urem_int(x, y)
 
 saturating_mod(x::T, y::T) where T <: SignedBitInteger = @saturating x - fld(x, y) * y
