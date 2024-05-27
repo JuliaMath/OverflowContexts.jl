@@ -80,8 +80,10 @@ function saturating_div(x::T, y::T) where T <: SignedBitInteger
 end
 saturating_div(x::T, y::T) where T <: UnsignedBitInteger =
     (y == zero(T)) ?
-        zero(T) :
-        Base.sdiv_int(x, y)
+        (x == zero(T) ?
+            zero(T) :
+            typemax(T)) :
+        Base.udiv_int(x, y)
 
 function saturating_fld(x::T, y::T) where T <: SignedBitInteger
     d = saturating_div(x, y)

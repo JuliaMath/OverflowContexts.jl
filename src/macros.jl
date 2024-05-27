@@ -1,6 +1,6 @@
 using Base.Meta: isexpr
 
-const op_method_symbols = (:+, :-, :*, :^, :abs, :÷, :div, :cld, :fld, :rem, :mod, :%)
+const op_method_symbols = (:+, :-, :*, :^, :abs, :÷, :div, :cld, :fld, :%, :rem, :mod)
 
 """
     @default_checked
@@ -25,8 +25,8 @@ macro default_checked()
         (@__MODULE__).eval(:(div(x) = checked_div(x)))
         (@__MODULE__).eval(:(fld(x) = checked_fld(x)))
         (@__MODULE__).eval(:(cld(x) = checked_cld(x)))
-        (@__MODULE__).eval(:(rem(x) = checked_rem(x)))
         (@__MODULE__).eval(:(%(x...) = checked_mod(x...)))
+        (@__MODULE__).eval(:(rem(x) = checked_rem(x)))
         (@__MODULE__).eval(:(mod(x) = checked_mod(x)))
         (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
@@ -56,8 +56,8 @@ macro default_unchecked()
         (@__MODULE__).eval(:(div(x) = unchecked_div(x)))
         (@__MODULE__).eval(:(fld(x) = unchecked_fld(x)))
         (@__MODULE__).eval(:(cld(x) = unchecked_cld(x)))
-        (@__MODULE__).eval(:(rem(x) = unchecked_rem(x)))
         (@__MODULE__).eval(:(%(x...) = unchecked_mod(x...)))
+        (@__MODULE__).eval(:(rem(x) = unchecked_rem(x)))
         (@__MODULE__).eval(:(mod(x) = unchecked_mod(x)))
         (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
@@ -87,8 +87,8 @@ macro default_saturating()
         (@__MODULE__).eval(:(div(x) = OverflowContexts.saturating_div(x)))
         (@__MODULE__).eval(:(fld(x) = OverflowContexts.saturating_fld(x)))
         (@__MODULE__).eval(:(cld(x) = OverflowContexts.saturating_cld(x)))
-        (@__MODULE__).eval(:(rem(x) = OverflowContexts.saturating_rem(x)))
         (@__MODULE__).eval(:(%(x...) = OverflowContexts.saturating_mod(x...)))
+        (@__MODULE__).eval(:(rem(x) = OverflowContexts.saturating_rem(x)))
         (@__MODULE__).eval(:(mod(x) = OverflowContexts.saturating_mod(x)))
         (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
@@ -140,8 +140,8 @@ const op_checked = Dict(
     :div => :(checked_div),
     :fld => :(checked_fld),
     :cld => :(checked_cld),
+    :% => :(checked_rem),
     :rem => :(checked_rem),
-    :% => :(checked_mod),
     :mod => :(checked_mod)
 )
 
@@ -157,8 +157,8 @@ const op_unchecked = Dict(
     :div => :(unchecked_div),
     :fld => :(unchecked_fld),
     :cld => :(unchecked_cld),
+    :% => :(unchecked_rem),
     :rem => :(unchecked_rem),
-    :% => :(unchecked_mod),
     :mod => :(unchecked_mod)
 )
 
@@ -174,8 +174,8 @@ const op_saturating = Dict(
     :div => :(saturating_div),
     :fld => :(saturating_fld),
     :cld => :(saturating_cld),
+    :% => :(saturating_rem),
     :rem => :(saturating_rem),
-    :% => :(saturating_mod),
     :mod => :(saturating_mod)
 )
 

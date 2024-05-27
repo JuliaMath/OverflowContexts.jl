@@ -78,6 +78,29 @@ end
     @test @saturating(2typemax(UInt)) == typemax(UInt)
 end
 
+@testset "division methods" begin
+    @test_throws DivideError @checked typemin(Int) ÷ -1
+    @test_throws DivideError @checked -2 ÷ 0
+    @test_throws DivideError @checked 0 ÷ 0
+    @test_throws DivideError @checked 2 ÷ 0
+    @test_throws DivideError @checked 0x02 ÷ 0x00
+    @test_throws DivideError @checked 0x00 ÷ 0x00
+
+    @test @unchecked(typemin(Int) ÷ -1) == typemin(Int)
+    @test @unchecked(-2 ÷ 0) == 0
+    @test @unchecked(0 ÷ 0) == 0
+    @test @unchecked(2 ÷ 0) == 0
+    @test @unchecked(UInt(2) ÷ UInt(0)) == 0x00
+    @test @unchecked(UInt(0) ÷ UInt(0)) == 0x00
+
+    @test @saturating(typemin(Int) ÷ -1) == typemax(Int)
+    @test @saturating(-2 ÷ 0) == typemin(Int)
+    @test @saturating(0 ÷ 0) == 0
+    @test @saturating(2 ÷ 0) == typemax(Int)
+    @test @saturating(UInt(2) ÷ UInt(0)) == typemax(UInt)
+    @test @saturating(UInt(0) ÷ UInt(0)) == UInt(0)
+end
+
 @testset "exhaustive checks over 16 bit math" begin
     for T ∈ (Int16, UInt16)
         if T <: Signed
@@ -116,6 +139,52 @@ end
         @testset "$T abs" begin
             for i ∈ typemin(T) + T(1):typemax(T)
                 @test @checked(abs(i)) == @unchecked(abs(i)) == @saturating(abs(i)) == abs(i)
+            end
+        end
+        @testset "$T div" begin
+            for i ∈ typemin(T):typemax(T)
+                for j ∈ (typemin(T) ÷ T(4), T(0) - T(1), typemax(T) ÷ T(4))
+                    j != 0 && (T <: Unsigned || i > typemin(T) || j != -1) || continue
+                    @test @checked(i ÷ j) == @unchecked(i ÷ j) == @saturating(i ÷ j) == i ÷ j
+                end
+            end
+            for i ∈ typemin(T):typemax(T)
+                for j ∈ (typemin(T) ÷ T(4), T(0) - T(1), T(0), T(1), typemax(T) ÷ T(4))
+                    j != 0 && (T <: Unsigned || i > typemin(T) || j != -1) || continue
+                    @test @checked(div(i, j)) == @unchecked(div(i, j)) == @saturating(div(i, j)) == div(i, j)
+                end
+            end
+        end
+        @testset "$T fld" begin
+            for i ∈ typemin(T):typemax(T)
+                for j ∈ (typemin(T) ÷ T(4), T(0) - T(1), T(0), T(1), typemax(T) ÷ T(4))
+                    j != 0 && (T <: Unsigned || i > typemin(T) || j != -1) || continue
+                    @test @checked(fld(i, j)) == @unchecked(fld(i, j)) == @saturating(fld(i, j)) == fld(i, j)
+                end
+            end
+        end
+        @testset "$T cld" begin
+            for i ∈ typemin(T):typemax(T)
+                for j ∈ (typemin(T) ÷ T(4), T(0) - T(1), T(0), T(1), typemax(T) ÷ T(4))
+                    j != 0 && (T <: Unsigned || i > typemin(T) || j != -1) || continue
+                    @test @checked(cld(i, j)) == @unchecked(cld(i, j)) == @saturating(cld(i, j)) == cld(i, j)
+                end
+            end
+        end
+        @testset "$T rem" begin
+            for i ∈ typemin(T):typemax(T)
+                for j ∈ (typemin(T) ÷ T(4), T(0) - T(1), T(0), T(1), typemax(T) ÷ T(4))
+                    j != 0 && (T <: Unsigned || i > typemin(T) || j != -1) || continue
+                    @test @checked(rem(i, j)) == @unchecked(rem(i, j)) == @saturating(rem(i, j)) == rem(i, j)
+                end
+            end
+        end
+        @testset "$T mod" begin
+            for i ∈ typemin(T):typemax(T)
+                for j ∈ (typemin(T) ÷ T(4), T(0) - T(1), T(0), T(1), typemax(T) ÷ T(4))
+                    j != 0 && (T <: Unsigned || i > typemin(T) || j != -1) || continue
+                    @test @checked(i % j) == @unchecked(i % j) == @saturating(i % j) == i % j
+                end
             end
         end
     end

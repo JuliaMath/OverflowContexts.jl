@@ -26,8 +26,8 @@ unchecked_abs(x...) = Base.abs(x...)
 checked_div(x...) = Base.:÷(x...)
 checked_fld(x...) = Base.fld(x...)
 checked_cld(x...) = Base.cld(x...)
-checked_rem(x...) = Base.rem(x...)
-checked_mod(x...) = Base.:%(x...)
+checked_rem(x...) = Base.:%(x...) # Yes, % is `rem`, not `mod`
+checked_mod(x...) = Base.mod(x...)
 checked_divrem(x...) = Base.divrem(x...)
 
 # convert multi-argument calls into nested two-argument calls
