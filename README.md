@@ -73,7 +73,7 @@ This package also adds a saturating mode, where values accumulate at the maximum
 # Evaluates to `typemax(Int64)`
 ```
 
-Broadcasted operators/methods and elementwise array operators, and assignment operators are also rewritten:
+Broadcasted operators/methods, elementwise array operators, and assignment operators are also rewritten:
 ```julia
 @checked .-fill(typemin(Int64), 2)
 # Expands to `OverflowContexts.checked_neg.(fill(typemin(Int64), 2))`
@@ -89,7 +89,7 @@ a = fill(1, 2)
 # Evaluates to `[typemax(Int64), typemax(Int64)]`
 ```
 
-Functions passed as an argument are also rewritten:
+Functions passed as an argument are also supported:
 ```julia
 @saturating map(-, fill(typemin(Int64), 2))
 # Expands to `map(OverflowContexts.saturating_neg, fill(typemin(Int64), 2))`
@@ -103,7 +103,7 @@ Julia has a more complex `div` API than is supported here (e.g. supporting round
 
 ## Module Default Macros
 
-If you are writing a module and desire to set the default type of arithemtic for the module, place e.g., `@default_unchecked`, `@default_checked`, `@default_saturating` at the top of the module. This macro defines module-local copies of all of the supported arithemtic operators and methods, mapping them to the appropriate `checked_` or `saturating_` methods. The defaults do not affect anything inside the expression/block-level macros. These defaults may also be used on the REPL to switch between modes, although keep in mind that it will also cause previous methods defined on the REPL (in the `Main` module) to be recompiled with the new default.
+If you are writing a module and desire to set the default type of arithemtic for the module, place e.g., `@default_unchecked`, `@default_checked`, `@default_saturating` at the top of the module. This macro defines module-local copies of all of the supported arithemtic operators and methods, mapping them to the appropriate `unchecked`, `checked_`, or `saturating_` methods. The defaults do not affect anything inside the expression/block-level macros. These defaults may also be used on the REPL to switch between modes, although keep in mind that it will also cause previous methods defined on the REPL (in the `Main` module) to be recompiled with the new default.
 ```julia
 module Foo
     using OverflowContexts
@@ -119,7 +119,7 @@ Foo.baz(typemax(Int64), 1)
 
 # Custom Numeric Types Support
 
-If you are implementing your own `Number` types, this package should just work for you so long as you extend the Base operators and the Base.Checked `checked_` methods. For `saturating_`, your package will need to either take OverflowContexts as a dependency or a weak dependency in order to import the `saturating_` methods, until/unless Julia implements them directly.
+If you are implementing your own `Number` types, this package should just work for you so long as you extend the Base operators and the Base.Checked `checked_` methods. For `saturating_`, your package will need to either take OverflowContexts as a dependency or a weak dependency with a package extension in order to import the `saturating_` methods, until/unless Julia implements them directly.
 
 ## Related Packages
 
