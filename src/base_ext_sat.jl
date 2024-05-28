@@ -93,11 +93,15 @@ saturating_fld(x::T, y::T) where T <: UnsignedBitInteger = saturating_div(x, y)
 
 function saturating_cld(x::T, y::T) where T <: SignedBitInteger
     d = saturating_div(x, y)
-    return @saturating d + (((x > 0) == (y > 0)) & (d * y != x))
+    return x == typemin(T) && y == -1 || y == 0 ?
+        d :
+        d + (((x > 0) == (y > 0)) & (d * y != x))
 end
 function saturating_cld(x::T, y::T) where T <: UnsignedBitInteger
     d = saturating_div(x, y)
-    return @saturating d + (d * y != x)
+    return y == 0 ?
+        d :
+        d + (d * y != x)
 end
 
 saturating_rem(x::T, y::T) where T <: SignedBitInteger =
@@ -109,7 +113,10 @@ saturating_rem(x::T, y::T) where T <: UnsignedBitInteger =
         zero(T) :
         Base.urem_int(x, y)
 
-saturating_mod(x::T, y::T) where T <: SignedBitInteger = @saturating x - fld(x, y) * y
-saturating_mod(x::T, y::T) where T <: UnsignedBitInteger = @saturating rem(x, y)
+function saturating_mod(x::T, y::T) where T <: SignedBitInteger
+    return x == typemin(T) && y == -1 || y == 0 ?
+        (@saturating rem(x, y)) :
+        @saturating x - fld(x, y) * y
+end
 
-saturating_divrem(x::T, y::T) where T <: BitInteger = @saturating div(x, y), rem(x, y)
+saturating_mod(x::T, y::T) where T <: UnsignedBitInteger = @saturating rem(x, y)

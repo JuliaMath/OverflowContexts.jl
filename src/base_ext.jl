@@ -117,17 +117,23 @@ unchecked_div(x::T, y::T) where T <: UnsignedBitInteger =
 
 function unchecked_fld(x::T, y::T) where T <: SignedBitInteger
     d = unchecked_div(x, y)
-    return d - (signbit(x ⊻ y) & (d * y != x))
+    return y == 0 ?
+        d :
+        d - (signbit(x ⊻ y) & (d * y != x))
 end
 unchecked_fld(x::T, y::T) where T <: UnsignedBitInteger = unchecked_div(x, y)
 
 function unchecked_cld(x::T, y::T) where T <: SignedBitInteger
     d = unchecked_div(x, y)
-    return d + (((x > 0) == (y > 0)) & (d * y != x))
+    return x == typemin(T) && y == -1 || y == 0 ?
+        d :
+        d + (((x > 0) == (y > 0)) & (d * y != x))
 end
 function unchecked_cld(x::T, y::T) where T <: UnsignedBitInteger
     d = unchecked_div(x, y)
-    return d + (d * y != x)
+    return y == 0 ?
+        d :
+        d + (d * y != x)
 end
 
 unchecked_rem(x::T, y::T) where T <: SignedBitInteger =
@@ -143,8 +149,6 @@ unchecked_rem(x::T, y::T) where T <: UnsignedBitInteger =
 
 unchecked_mod(x::T, y::T) where T <: SignedBitInteger = x - unchecked_fld(x, y) * y
 unchecked_mod(x::T, y::T) where T <: UnsignedBitInteger = unchecked_rem(x, y)
-
-unchecked_divrem(x::T, y::T) where T <: BitInteger = unchecked_div(x, y), unchecked_rem(x, y)
 
 
 if VERSION < v"1.11"

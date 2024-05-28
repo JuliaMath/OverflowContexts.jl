@@ -100,6 +100,73 @@ end
     @test @saturating(UInt(0) ÷ UInt(0)) == UInt(0)
     @test @saturating(UInt(2) ÷ UInt(0)) == typemax(UInt)
 
+
+    @test_throws DivideError @checked div(typemin(Int), -1)
+    @test_throws DivideError @checked div(-2, 0)
+    @test_throws DivideError @checked div(0, 0)
+    @test_throws DivideError @checked div(2, 0)
+    @test_throws DivideError @checked div(0x00, 0x00)
+    @test_throws DivideError @checked div(0x02, 0x00)
+
+    @test @unchecked(div(typemin(Int), -1)) == typemin(Int)
+    @test @unchecked(div(-2, 0)) == 0
+    @test @unchecked(div(0, 0)) == 0
+    @test @unchecked(div(2, 0)) == 0
+    @test @unchecked(div(UInt(0), UInt(0))) == 0x00
+    @test @unchecked(div(UInt(2), UInt(0))) == 0x00
+
+    @test @saturating(div(typemin(Int), -1)) == typemax(Int)
+    @test @saturating(div(-2, 0)) == typemin(Int)
+    @test @saturating(div(0, 0)) == 0
+    @test @saturating(div(2, 0)) == typemax(Int)
+    @test @saturating(div(UInt(0), UInt(0))) == UInt(0)
+    @test @saturating(div(UInt(2), UInt(0))) == typemax(UInt)
+
+
+    @test_throws DivideError @checked fld(typemin(Int), -1)
+    @test_throws DivideError @checked fld(-2, 0)
+    @test_throws DivideError @checked fld(0, 0)
+    @test_throws DivideError @checked fld(2, 0)
+    @test_throws DivideError @checked fld(0x00, 0x00)
+    @test_throws DivideError @checked fld(0x02, 0x00)
+
+    @test @unchecked(fld(typemin(Int), -1)) == typemin(Int)
+    @test @unchecked(fld(-2, 0)) == 0
+    @test @unchecked(fld(0, 0)) == 0
+    @test @unchecked(fld(2, 0)) == 0
+    @test @unchecked(fld(UInt(0), UInt(0))) == 0x00
+    @test @unchecked(fld(UInt(2), UInt(0))) == 0x00
+
+    @test @saturating(fld(typemin(Int), -1)) == typemax(Int)
+    @test @saturating(fld(-2, 0)) == typemin(Int)
+    @test @saturating(fld(0, 0)) == 0
+    @test @saturating(fld(2, 0)) == typemax(Int)
+    @test @saturating(fld(UInt(0), UInt(0))) == UInt(0)
+    @test @saturating(fld(UInt(2), UInt(0))) == typemax(UInt)
+
+
+    @test_throws DivideError @checked cld(typemin(Int), -1)
+    @test_throws DivideError @checked cld(-2, 0)
+    @test_throws DivideError @checked cld(0, 0)
+    @test_throws DivideError @checked cld(2, 0)
+    @test_throws DivideError @checked cld(0x00, 0x00)
+    @test_throws DivideError @checked cld(0x02, 0x00)
+
+    @test @unchecked(cld(typemin(Int), -1)) == typemin(Int)
+    @test @unchecked(cld(-2, 0)) == 0
+    @test @unchecked(cld(0, 0)) == 0
+    @test @unchecked(cld(2, 0)) == 0
+    @test @unchecked(cld(UInt(0), UInt(0))) == 0x00
+    @test @unchecked(cld(UInt(2), UInt(0))) == 0x00
+
+    @test @saturating(cld(typemin(Int), -1)) == typemax(Int)
+    @test @saturating(cld(-2, 0)) == typemin(Int)
+    @test @saturating(cld(0, 0)) == 0
+    @test @saturating(cld(2, 0)) == typemax(Int)
+    @test @saturating(cld(UInt(0), UInt(0))) == UInt(0)
+    @test @saturating(cld(UInt(2), UInt(0))) == typemax(UInt)
+
+
     @test @checked(typemin(Int) % -1) == 0 # The intrinsic provides the correct result rather than erroring
     @test_throws DivideError @checked -2 % 0
     @test_throws DivideError @checked 0 % 0
@@ -120,6 +187,50 @@ end
     @test @saturating(2 % 0) == 0
     @test @saturating(UInt(0) % UInt(0)) == 0x00
     @test @saturating(UInt(2) % UInt(0)) == 0x00
+
+
+    @test @checked(rem(typemin(Int), -1)) == 0
+    @test_throws DivideError @checked rem(-2, 0)
+    @test_throws DivideError @checked rem(0, 0)
+    @test_throws DivideError @checked rem(2, 0)
+    @test_throws DivideError @checked rem(0x00, 0x00)
+    @test_throws DivideError @checked rem(0x02, 0x00)
+
+    @test @unchecked(rem(typemin(Int), -1)) == 0
+    @test @unchecked(rem(-2, 0)) == -2
+    @test @unchecked(rem(0, 0)) == 0
+    @test @unchecked(rem(2, 0)) == 2
+    @test @unchecked(rem(UInt(0), UInt(0))) == 0x00
+    @test @unchecked(rem(UInt(2), UInt(0))) == 0x02
+
+    @test @saturating(rem(typemin(Int), -1)) == 0
+    @test @saturating(rem(-2, 0)) == 0
+    @test @saturating(rem(0, 0)) == 0
+    @test @saturating(rem(2, 0)) == 0
+    @test @saturating(rem(UInt(0), UInt(0))) == 0x00
+    @test @saturating(rem(UInt(2), UInt(0))) == 0x00
+
+
+    @test @checked(mod(typemin(Int), -1)) == 0
+    @test_throws DivideError @checked mod(-2, 0)
+    @test_throws DivideError @checked mod(0, 0)
+    @test_throws DivideError @checked mod(2, 0)
+    @test_throws DivideError @checked mod(0x00, 0x00)
+    @test_throws DivideError @checked mod(0x02, 0x00)
+
+    @test @unchecked(mod(typemin(Int), -1)) == 0
+    @test @unchecked(mod(-2, 0)) == -2
+    @test @unchecked(mod(0, 0)) == 0
+    @test @unchecked(mod(2, 0)) == 2
+    @test @unchecked(mod(UInt(0), UInt(0))) == 0x00
+    @test @unchecked(mod(UInt(2), UInt(0))) == 0x02
+
+    @test @saturating(mod(typemin(Int), -1)) == 0
+    @test @saturating(mod(-2, 0)) == 0
+    @test @saturating(mod(0, 0)) == 0
+    @test @saturating(mod(2, 0)) == 0
+    @test @saturating(mod(UInt(0), UInt(0))) == 0x00
+    @test @saturating(mod(UInt(2), UInt(0))) == 0x00
 end
 
 @testset "exhaustive checks over 16 bit math" begin
@@ -602,12 +713,15 @@ end
     @unchecked(copy(cc) .-= 2) == fill(typemax(Int) - 1, 2)
     @unchecked(copy(aa) .*= 2) == fill(-2, 2)
     @unchecked(copy(aa) .^= 2) == fill(1, 2)
-    @unchecked(copy(aa) .÷= 0) == fill(1, 2)
+    @unchecked(copy(aa) .÷= 0) == fill(0, 2)
+    @unchecked(copy(aa) .%= 0) == fill(0, 2)
 
     @saturating(copy(aa) .+= 2) == aa
     @saturating(copy(cc) .-= 2) == cc
     @saturating(copy(aa) .*= 2) == aa
     @saturating(copy(aa) .^= 2) == aa
+    @saturating(copy(aa) .÷= 0) == aa
+    @saturating(copy(aa) .%= 0) == fill(0, 2)
 end
 
 @testset "Elementwise array methods are replaced, and others throw" begin
