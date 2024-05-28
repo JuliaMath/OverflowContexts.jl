@@ -1,10 +1,14 @@
 # OverflowContexts.jl
 
-OverflowContexts provides easy manipulation of (integer) arithmetic modes.
+OverflowContexts provides easy manipulation of (integer, or any type that opts-in) arithmetic modes.
+
+## Justification
 
 By default, Julia generally uses overflowing (unchecked) integer math (other than division methods), which silently wraps around from the maximum to the minimum value when it gets too large or small, respectively. This choice is because checking for overflow is slower and means that any integer arithmetic could throw an exception, which the compiler would need to account for.
 
-With base Julia, if a user wishes to use checked arithmetic, they would need to bring in `Base.Checked` and explicitly use e.g., `checked_add(x, y)` rather than the natural operator.
+With base Julia, if a user wishes to use checked arithmetic, they would need to bring in `Base.Checked` and explicitly use e.g., `checked_add(x, y)` rather than the natural operator. This is cumbersome, but we can use Julia's metaprogramming features to remove this overhead.
+
+## Expression Macros
 
 Using the macros in OverflowContexts, an expression or code block can be rewritten to replace operators and certain methods (`+`, `-`, `*`, `^`, `abs`) on the fly with appropriate method calls:
 ```julia
@@ -66,7 +70,7 @@ This package also adds a saturating mode, where values accumulate at the maximum
 
 @saturating abs(typemin(Int64))
 # Expands to `OverflowContexts.checked_abs(typemin(Int64))`
-# Throws `ERROR: OverflowError: checked arithmetic: cannot compute |x| for x = -9223372036854775808::Int64`
+# Evaluates to `typemax(Int64)`
 ```
 
 Broadcasted operators/methods and elementwise array operators, and assignment operators are also rewritten:
@@ -96,6 +100,9 @@ Division-related operators and methods (`÷`, `div`, `fld`, `cld`, `%`, `rem`, `
 
 Julia has a more complex `div` API than is supported here (e.g. supporting rounding modes) but this package just covers the two-argument methods available inside `Base.Checked`.
 
+
+## Module Default Macros
+
 If you are writing a module and desire to set the default type of arithemtic for the module, place e.g., `@default_unchecked`, `@default_checked`, `@default_saturating` at the top of the module. This macro defines module-local copies of all of the supported arithemtic operators and methods, mapping them to the appropriate `checked_` or `saturating_` methods. The defaults do not affect anything inside the expression/block-level macros. These defaults may also be used on the REPL to switch between modes, although keep in mind that it will also cause previous methods defined on the REPL (in the `Main` module) to be recompiled with the new default.
 ```julia
 module Foo
@@ -110,9 +117,12 @@ Foo.baz(typemax(Int64), 1)
 # Returns `typemax(Int64)`
 ```
 
+# Custom Numeric Types Support
+
 If you are implementing your own `Number` types, this package should just work for you so long as you extend the Base operators and the Base.Checked `checked_` methods. For `saturating_`, your package will need to either take OverflowContexts as a dependency or a weak dependency in order to import the `saturating_` methods, until/unless Julia implements them directly.
 
 ## Related Packages
 
 * [CheckedArithmetic.jl](https://github.com/JuliaMath/CheckedArithmetic.jl) - Predescessor to this package with more limited functionality, but also provides a utility to promote types for safer accumulators.
 * [SaferIntegers.jl](https://github.com/JeffreySarnoff/SaferIntegers.jl) - Uses the type system to enforce overflow checking even in code you don't control. OverflowContexts does not override this behavior, so they can work together well.
+* [FixedPointNumbers.jl](https://github.com/JuliaMath/FixedPointNumbers.jl) - Defines a non-integer decimal type that isn't floating point, and demonstrates how a new number type can naturally work with OverflowContexts.
