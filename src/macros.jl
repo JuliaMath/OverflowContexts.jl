@@ -15,19 +15,19 @@ macro default_checked()
         else
             @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
         end
-        (@__MODULE__).eval(:(-(x) = checked_neg(x)))
-        (@__MODULE__).eval(:(+(x...) = checked_add(x...)))
-        (@__MODULE__).eval(:(-(x...) = checked_sub(x...)))
-        (@__MODULE__).eval(:(*(x...) = checked_mul(x...)))
-        (@__MODULE__).eval(:(^(x...) = checked_pow(x...)))
-        (@__MODULE__).eval(:(abs(x) = checked_abs(x)))
-        (@__MODULE__).eval(:(÷(x...) = checked_div(x...)))
-        (@__MODULE__).eval(:(div(x) = checked_div(x)))
-        (@__MODULE__).eval(:(fld(x) = checked_fld(x)))
-        (@__MODULE__).eval(:(cld(x) = checked_cld(x)))
-        (@__MODULE__).eval(:(%(x...) = checked_mod(x...)))
-        (@__MODULE__).eval(:(rem(x) = checked_rem(x)))
-        (@__MODULE__).eval(:(mod(x) = checked_mod(x)))
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.checked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.checked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.checked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.checked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.checked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.checked_abs(x)))
+        (@__MODULE__).eval(:(÷(x...) = OverflowContexts.checked_div(x...)))
+        (@__MODULE__).eval(:(div(x) = OverflowContexts.checked_div(x)))
+        (@__MODULE__).eval(:(fld(x) = OverflowContexts.checked_fld(x)))
+        (@__MODULE__).eval(:(cld(x) = OverflowContexts.checked_cld(x)))
+        (@__MODULE__).eval(:(%(x...) = OverflowContexts.checked_mod(x...)))
+        (@__MODULE__).eval(:(rem(x) = OverflowContexts.checked_rem(x)))
+        (@__MODULE__).eval(:(mod(x) = OverflowContexts.checked_mod(x)))
         (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
     end
@@ -46,19 +46,19 @@ macro default_unchecked()
         else
             @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
         end
-        (@__MODULE__).eval(:(-(x) = unchecked_neg(x)))
-        (@__MODULE__).eval(:(+(x...) = unchecked_add(x...)))
-        (@__MODULE__).eval(:(-(x...) = unchecked_sub(x...)))
-        (@__MODULE__).eval(:(*(x...) = unchecked_mul(x...)))
-        (@__MODULE__).eval(:(^(x...) = unchecked_pow(x...)))
-        (@__MODULE__).eval(:(abs(x) = unchecked_abs(x)))
-        (@__MODULE__).eval(:(÷(x...) = unchecked_div(x...)))
-        (@__MODULE__).eval(:(div(x) = unchecked_div(x)))
-        (@__MODULE__).eval(:(fld(x) = unchecked_fld(x)))
-        (@__MODULE__).eval(:(cld(x) = unchecked_cld(x)))
-        (@__MODULE__).eval(:(%(x...) = unchecked_mod(x...)))
-        (@__MODULE__).eval(:(rem(x) = unchecked_rem(x)))
-        (@__MODULE__).eval(:(mod(x) = unchecked_mod(x)))
+        (@__MODULE__).eval(:(-(x) = OverflowContexts.unchecked_neg(x)))
+        (@__MODULE__).eval(:(+(x...) = OverflowContexts.unchecked_add(x...)))
+        (@__MODULE__).eval(:(-(x...) = OverflowContexts.unchecked_sub(x...)))
+        (@__MODULE__).eval(:(*(x...) = OverflowContexts.unchecked_mul(x...)))
+        (@__MODULE__).eval(:(^(x...) = OverflowContexts.unchecked_pow(x...)))
+        (@__MODULE__).eval(:(abs(x) = OverflowContexts.unchecked_abs(x)))
+        (@__MODULE__).eval(:(÷(x...) = OverflowContexts.unchecked_div(x...)))
+        (@__MODULE__).eval(:(div(x) = OverflowContexts.unchecked_div(x)))
+        (@__MODULE__).eval(:(fld(x) = OverflowContexts.unchecked_fld(x)))
+        (@__MODULE__).eval(:(cld(x) = OverflowContexts.unchecked_cld(x)))
+        (@__MODULE__).eval(:(%(x...) = OverflowContexts.unchecked_mod(x...)))
+        (@__MODULE__).eval(:(rem(x) = OverflowContexts.unchecked_rem(x)))
+        (@__MODULE__).eval(:(mod(x) = OverflowContexts.unchecked_mod(x)))
         (@__MODULE__).eval(:(__OverflowContextDefaultSet = true))
         nothing
     end
@@ -129,54 +129,54 @@ macro saturating(expr)
 end
 
 const op_checked = Dict(
-    Symbol("unary-") => :(checked_neg),
-    Symbol("ambig-") => :(checked_negsub),
-    :+ => :(checked_add),
-    :- => :(checked_sub),
-    :* => :(checked_mul),
-    :^ => :(checked_pow),
-    :abs => :(checked_abs),
-    :÷ => :(checked_div),
-    :div => :(checked_div),
-    :fld => :(checked_fld),
-    :cld => :(checked_cld),
-    :% => :(checked_rem),
-    :rem => :(checked_rem),
-    :mod => :(checked_mod)
+    Symbol("unary-") => :(OverflowContexts.checked_neg),
+    Symbol("ambig-") => :(OverflowContexts.checked_negsub),
+    :+ => :(OverflowContexts.checked_add),
+    :- => :(OverflowContexts.checked_sub),
+    :* => :(OverflowContexts.checked_mul),
+    :^ => :(OverflowContexts.checked_pow),
+    :abs => :(OverflowContexts.checked_abs),
+    :÷ => :(OverflowContexts.checked_div),
+    :div => :(OverflowContexts.checked_div),
+    :fld => :(OverflowContexts.checked_fld),
+    :cld => :(OverflowContexts.checked_cld),
+    :% => :(OverflowContexts.checked_rem),
+    :rem => :(OverflowContexts.checked_rem),
+    :mod => :(OverflowContexts.checked_mod)
 )
 
 const op_unchecked = Dict(
-    Symbol("unary-") => :(unchecked_neg),
-    Symbol("ambig-") => :(unchecked_negsub),
-    :+ => :(unchecked_add),
-    :- => :(unchecked_sub),
-    :* => :(unchecked_mul),
-    :^ => :(unchecked_pow),
-    :abs => :(unchecked_abs),
-    :÷ => :(unchecked_div),
-    :div => :(unchecked_div),
-    :fld => :(unchecked_fld),
-    :cld => :(unchecked_cld),
-    :% => :(unchecked_rem),
-    :rem => :(unchecked_rem),
-    :mod => :(unchecked_mod)
+    Symbol("unary-") => :(OverflowContexts.unchecked_neg),
+    Symbol("ambig-") => :(OverflowContexts.unchecked_negsub),
+    :+ => :(OverflowContexts.unchecked_add),
+    :- => :(OverflowContexts.unchecked_sub),
+    :* => :(OverflowContexts.unchecked_mul),
+    :^ => :(OverflowContexts.unchecked_pow),
+    :abs => :(OverflowContexts.unchecked_abs),
+    :÷ => :(OverflowContexts.unchecked_div),
+    :div => :(OverflowContexts.unchecked_div),
+    :fld => :(OverflowContexts.unchecked_fld),
+    :cld => :(OverflowContexts.unchecked_cld),
+    :% => :(OverflowContexts.unchecked_rem),
+    :rem => :(OverflowContexts.unchecked_rem),
+    :mod => :(OverflowContexts.unchecked_mod)
 )
 
 const op_saturating = Dict(
-    Symbol("unary-") => :(saturating_neg),
-    Symbol("ambig-") => :(saturating_negsub),
-    :+ => :(saturating_add),
-    :- => :(saturating_sub),
-    :* => :(saturating_mul),
-    :^ => :(saturating_pow),
-    :abs => :(saturating_abs),
-    :÷ => :(saturating_div),
-    :div => :(saturating_div),
-    :fld => :(saturating_fld),
-    :cld => :(saturating_cld),
-    :% => :(saturating_rem),
-    :rem => :(saturating_rem),
-    :mod => :(saturating_mod)
+    Symbol("unary-") => :(OverflowContexts.saturating_neg),
+    Symbol("ambig-") => :(OverflowContexts.saturating_negsub),
+    :+ => :(OverflowContexts.saturating_add),
+    :- => :(OverflowContexts.saturating_sub),
+    :* => :(OverflowContexts.saturating_mul),
+    :^ => :(OverflowContexts.saturating_pow),
+    :abs => :(OverflowContexts.saturating_abs),
+    :÷ => :(OverflowContexts.saturating_div),
+    :div => :(OverflowContexts.saturating_div),
+    :fld => :(OverflowContexts.saturating_fld),
+    :cld => :(OverflowContexts.saturating_cld),
+    :% => :(OverflowContexts.saturating_rem),
+    :rem => :(OverflowContexts.saturating_rem),
+    :mod => :(OverflowContexts.saturating_mod)
 )
 
 const broadcast_op_map = Dict(
