@@ -35,12 +35,11 @@ saturating_mul(x::T, y::T) where T <: Number = unchecked_mul(x, y)
 saturating_pow(x::T, y::T) where T <: Number = unchecked_pow(x, y)
 saturating_abs(x::T) where T <: Number = unchecked_abs(x)
 
-saturating_div(x::T, y::T) where T <: Number = saturating_div(x, y)
-saturating_fld(x::T, y::T) where T <: Number = saturating_fld(x, y)
-saturating_cld(x::T, y::T) where T <: Number = saturating_cld(x, y)
-saturating_rem(x::T, y::T) where T <: Number = saturating_rem(x, y)
-saturating_mod(x::T, y::T) where T <: Number = saturating_mod(x, y)
-saturating_divrem(x::T, y::T) where T <: Number = saturating_divrem(x, y)
+saturating_div(x::T, y::T) where T <: Number = unchecked_div(x, y)
+saturating_fld(x::T, y::T) where T <: Number = unchecked_fld(x, y)
+saturating_cld(x::T, y::T) where T <: Number = unchecked_cld(x, y)
+saturating_rem(x::T, y::T) where T <: Number = unchecked_rem(x, y)
+saturating_mod(x::T, y::T) where T <: Number = unchecked_mod(x, y)
 
 # saturating implementations
 saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)

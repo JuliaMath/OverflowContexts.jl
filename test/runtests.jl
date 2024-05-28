@@ -663,9 +663,12 @@ using SaferIntegers
 
 @testset "Ensure SaferIntegers are still safer" begin
     @test_throws OverflowError typemax(SafeInt) + 1
-
     @test_throws OverflowError @unchecked typemax(SafeInt) + 1
     @test_throws OverflowError @saturating typemax(SafeInt) + 1
+
+    @test_throws DivideError typemin(SafeInt) ÷ -1
+    @test_throws DivideError @unchecked typemin(SafeInt) ÷ -1
+    @test_throws DivideError @saturating typemin(SafeInt) ÷ -1
 
     (@__MODULE__).eval(:(
         module UncheckedDefaultSaferIntStillChecksModule
