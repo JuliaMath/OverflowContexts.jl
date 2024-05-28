@@ -1,8 +1,8 @@
 import Base: BitInteger
 import Base.Checked: mul_with_overflow
 
-if VERSION ≤ v"1.11-alpha"
-    import Base: power_by_squaring
+if VERSION ≥ v"1.11-alpha"
+    using Base: power_by_squaring
 end
 
 # resolve ambiguity when `-` used as symbol
