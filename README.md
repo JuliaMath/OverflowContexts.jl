@@ -1,66 +1,118 @@
 # OverflowContexts.jl
 
-This package conceptually extends `CheckedArithmetic.jl` to provide the following overall features:
-1. Ability to set a Module-level default to overflow-checked, overflow-permissive (unchecked), or saturating operations.
-2. Ability to specify whether a block of code should use overflow-checked, overflow-permissive (unchecked), or saturating operations regardless of the default.
+OverflowContexts provides easy manipulation of (integer) arithmetic modes.
 
-Together, these provide checked and unchecked contexts, as in other languages like C#:
-https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/checked-and-unchecked
+By default, Julia generally uses overflowing (unchecked) integer math (other than division methods), which silently wraps around from the maximum to the minimum value when it gets too large or small, respectively. This choice is because checking for overflow is slower and means that any integer arithmetic could throw an exception, which the compiler would need to account for.
 
-The expression-level `@checked`, `@unchecked`, and `@saturating` rewrite instances of `+`, `-`, `*`, `^`, and `abs` functions, to functions specific to the
-checked or permissive operation, and thus are not affected by switching the default. Symbols for the functions will also be replaced, to support
-calls like `foldl(+, v)`. If these macros are nested, the lowest level takes precedence so that an unchecked context can be nested inside a checked
-context and vice versa.
+With base Julia, if a user wishes to use checked arithmetic, they would need to bring in `Base.Checked` and explicitly use e.g., `checked_add(x, y)` rather than the natural operator.
 
-`@default_checked`, `@default_unchecked`, and `@default_saturating` create shadow copies of the `+`, `-`, `*`, `^`, and `abs` functions that redirect to overflow-checked
-or overflow-permissive operations, respectively, within the module it was executed in. All arguments that don't support overflow checking are passed
-through to their respective Base methods. **Important:** If you wish to use this feature, the first usage of this macro must occur earlier than the first usage of the affected Base functions. It should only be set once per module, though switching is allowed for interactive use. It is not necessary to set a default to use the expression-level macros.
-
+Using the macros in OverflowContexts, an expression or code block can be rewritten to replace operators and certain methods (`+`, `-`, `*`, `^`, `abs`) on the fly with appropriate method calls:
 ```julia
-using OverflowContexts
-@default_unchecked # Julia default, but need to place first so later usages will work for this example
+@checked -typemin(Int64)
+# Expands to `OverflowContexts.checked_neg(typemin(Int64))`
+# Throws `ERROR: OverflowError: 0 - -9223372036854775808 overflowed for type Int64`
 
-x = typemax(Int) # 9223372036854775807
-x + 1 # -9223372036854775808
+@checked typemax(Int64) + 1
+# Expands to `OverflowContexts.checked_add(typemax(Int64), 1)`
+# Throws `ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64`
 
-@default_checked
-x + 1 # ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64
+@checked typemin(Int64) - 1
+# Expands to `OverflowContexts.checked_sub(typemin(Int64), 1)`
+# Throws `ERROR: OverflowError: -9223372036854775807 + 1 overflowed for type Int64`
 
-@unchecked x * 2 # -2
+@checked typemax(Int64) * 2
+# Expands to `OverflowContexts.checked_mul(typemax(Int64), 2)`
+# Throws `ERROR: OverflowError: 9223372036854775807 * 2 overflowed for type Int64`
 
-@unchecked begin
-    x * 2 # -2
-    @checked x + 1 # ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64
-end
+@checked typemax(Int64) ^ 2
+# Expands to `OverflowContexts.checked_pow(typemax(Int64), 2)`
+# Throws `ERROR: OverflowError: 9223372036854775807 * 9223372036854775807overflowed for type Int64`
 
-@default_unchecked
-x + 1 # -9223372036854775808
-
-d() = x + 1; c() = d(); b() = c(); a() = b();
-
-a() #-9223372036854775808
-@checked a() # doesn't cross function boundary; no OverflowError
-
-@default_checked # previous uses of operator in this module recompiled with new default
-a() # ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64
-
-@unchecked a() # doesn't cross function boundary; still throws OverflowError
-@default_unchecked
-
-a()  # -9223372036854775808
-
-# rewrite a symbol
-@checked foldl(+, (typemax(Int), 1))
-
-# assignment operators
-aa = typemax(Int)
-@checked aa += 1 # OverflowError: 9223372036854775807 + 1 overflowed for type Int64
+@checked abs(typemin(Int64))
+# Expands to `OverflowContexts.checked_abs(typemin(Int64))`
+# Throws `ERROR: OverflowError: checked arithmetic: cannot compute |x| for x = -9223372036854775808::Int64`
 ```
 
-If you are implementing your own numeric types, this package should just work for you so long as you extend the Base operators and the Base.Checked `checked_` methods.
+Code blocks can also be nested, with the innermost block taking priority:
+```julia
+@checked begin
+    @unchecked typemax(Int64) * 2
+end
+# Expands to `OverflowContexts.unchecked_mul(typemax(Int64), 2)`
+# Evaluates to `-2`
+```
+
+This package also adds a saturating mode, where values accumulate at the maximum and minimum for the type:
+```julia
+@saturating -typemin(Int64)
+# Expands to `OverflowContexts.saturating_neg(typemin(Int64))`
+# Evaluates to `typemax(Int64)`
+
+@saturating typemax(Int64) + 1
+# Expands to `OverflowContexts.saturating_add(typemax(Int64), 1)`
+# Evaluates to `typemax(Int64)`
+
+@saturating typemin(Int64) - 1
+# Expands to `OverflowContexts.saturating_sub(typemin(Int64), 1)`
+# Evaluates to `typemin(Int64)`
+
+@saturating typemax(Int64) * 2
+# Expands to `OverflowContexts.saturating_mul(typemax(Int64), 2)`
+# Evaluates to `typemax(Int64)`
+
+@saturating typemax(Int64) ^ 2
+# Expands to `OverflowContexts.saturating_pow(typemax(Int64), 2)`
+# Evaluates to `typemax(Int64)`
+
+@saturating abs(typemin(Int64))
+# Expands to `OverflowContexts.checked_abs(typemin(Int64))`
+# Throws `ERROR: OverflowError: checked arithmetic: cannot compute |x| for x = -9223372036854775808::Int64`
+```
+
+Broadcasted operators/methods and elementwise array operators, and assignment operators are also rewritten:
+```julia
+@checked .-fill(typemin(Int64), 2)
+# Expands to `OverflowContexts.checked_neg.(fill(typemin(Int64), 2))`
+# Throws `ERROR: OverflowError: 0 - -9223372036854775808 overflowed for type Int64`
+
+@checked fill(typemax(Int64), 2) + fill(1, 2)
+# Expands to `OverflowContexts.checked_add(fill(typemax(Int64), 2), fill(1, 2))`
+# Throws `ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64`
+
+a = fill(1, 2)
+@saturating a += fill(typemax(Int64), 2)
+# Expands to `a = OverflowContexts.saturating_add(a, fill(typemax(Int64), 2))`
+# Evaluates to `[typemax(Int64), typemax(Int64)]`
+```
+
+Functions passed as an argument are also rewritten:
+```julia
+@saturating map(-, fill(typemin(Int64), 2))
+# Expands to `map(OverflowContexts.saturating_neg, fill(typemin(Int64), 2))`
+# Evaluates to `[typemax(Int64), typemax(Int64)]`
+```
+
+Division-related operators and methods (`÷`, `div`, `fld`, `cld`, `%`, `rem`, `mod`), in contrast, are checked by default in Julia. This is primarily because the LLVM compiler deems division by 0, or `-typemin(T) ÷ -one(T)` to be undefined behavior. Also, integer division on CPUs are generally quite slow and so this choice doesn't make much difference for performance. This package provides unchecked and saturating variants of these methods. The main benefit of the unchecked methods is that they are guaranteed to not throw an exception, however the result of a bad division should not be relied on. The saturating variant defines division by zero by treating `typemin(T)` and `typemax(T)` as saturating towards infinity, and returning `0` for `0 ÷ 0`. The saturating remainder methods produce complementary values.
+
+Julia has a more complex `div` API than is supported here (e.g. supporting rounding modes) but this package just covers the two-argument methods available inside `Base.Checked`.
+
+If you are writing a module and desire to set the default type of arithemtic for the module, place e.g., `@default_unchecked`, `@default_checked`, `@default_saturating` at the top of the module. This macro defines module-local copies of all of the supported arithemtic operators and methods, mapping them to the appropriate `checked_` or `saturating_` methods. The defaults do not affect anything inside the expression/block-level macros. These defaults may also be used on the REPL to switch between modes, although keep in mind that it will also cause previous methods defined on the REPL (in the `Main` module) to be recompiled with the new default.
+```julia
+module Foo
+    using OverflowContexts
+    @default_checked
+    bar(x, y) = x + y
+    baz(x, y) = @saturating x + y
+end
+Foo.bar(typemax(Int64), 1)
+# Throws `ERROR: OverflowError: 9223372036854775807 + 1 overflowed for type Int64`
+Foo.baz(typemax(Int64), 1)
+# Returns `typemax(Int64)`
+```
+
+If you are implementing your own `Number` types, this package should just work for you so long as you extend the Base operators and the Base.Checked `checked_` methods. For `saturating_`, your package will need to either take OverflowContexts as a dependency or a weak dependency in order to import the `saturating_` methods, until/unless Julia implements them directly.
 
 ## Related Packages
 
 * [CheckedArithmetic.jl](https://github.com/JuliaMath/CheckedArithmetic.jl) - Predescessor to this package with more limited functionality, but also provides a utility to promote types for safer accumulators.
-* [SaferIntegers.jl](https://github.com/JeffreySarnoff/SaferIntegers.jl) - Uses the type system to
-enforce overflow checking even in code you don't control.
+* [SaferIntegers.jl](https://github.com/JeffreySarnoff/SaferIntegers.jl) - Uses the type system to enforce overflow checking even in code you don't control. OverflowContexts does not override this behavior, so they can work together well.
