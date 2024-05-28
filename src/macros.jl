@@ -136,13 +136,13 @@ const op_checked = Dict(
     :* => :(OverflowContexts.checked_mul),
     :^ => :(OverflowContexts.checked_pow),
     :abs => :(OverflowContexts.checked_abs),
-    :÷ => :(checked_div),
-    :div => :(checked_div),
-    :fld => :(checked_fld),
-    :cld => :(checked_cld),
-    :% => :(checked_rem),
-    :rem => :(checked_rem),
-    :mod => :(checked_mod)
+    :÷ => :(OverflowContexts.checked_div),
+    :div => :(OverflowContexts.checked_div),
+    :fld => :(OverflowContexts.checked_fld),
+    :cld => :(OverflowContexts.checked_cld),
+    :% => :(OverflowContexts.checked_rem),
+    :rem => :(OverflowContexts.checked_rem),
+    :mod => :(OverflowContexts.checked_mod)
 )
 
 const op_unchecked = Dict(
@@ -153,13 +153,13 @@ const op_unchecked = Dict(
     :* => :(OverflowContexts.unchecked_mul),
     :^ => :(OverflowContexts.unchecked_pow),
     :abs => :(OverflowContexts.unchecked_abs),
-    :÷ => :(unchecked_div),
-    :div => :(unchecked_div),
-    :fld => :(unchecked_fld),
-    :cld => :(unchecked_cld),
-    :% => :(unchecked_rem),
-    :rem => :(unchecked_rem),
-    :mod => :(unchecked_mod)
+    :÷ => :(OverflowContexts.unchecked_div),
+    :div => :(OverflowContexts.unchecked_div),
+    :fld => :(OverflowContexts.unchecked_fld),
+    :cld => :(OverflowContexts.unchecked_cld),
+    :% => :(OverflowContexts.unchecked_rem),
+    :rem => :(OverflowContexts.unchecked_rem),
+    :mod => :(OverflowContexts.unchecked_mod)
 )
 
 const op_saturating = Dict(
@@ -170,13 +170,13 @@ const op_saturating = Dict(
     :* => :(OverflowContexts.saturating_mul),
     :^ => :(OverflowContexts.saturating_pow),
     :abs => :(OverflowContexts.saturating_abs),
-    :÷ => :(saturating_div),
-    :div => :(saturating_div),
-    :fld => :(saturating_fld),
-    :cld => :(saturating_cld),
-    :% => :(saturating_rem),
-    :rem => :(saturating_rem),
-    :mod => :(saturating_mod)
+    :÷ => :(OverflowContexts.saturating_div),
+    :div => :(OverflowContexts.saturating_div),
+    :fld => :(OverflowContexts.saturating_fld),
+    :cld => :(OverflowContexts.saturating_cld),
+    :% => :(OverflowContexts.saturating_rem),
+    :rem => :(OverflowContexts.saturating_rem),
+    :mod => :(OverflowContexts.saturating_mod)
 )
 
 const broadcast_op_map = Dict(
