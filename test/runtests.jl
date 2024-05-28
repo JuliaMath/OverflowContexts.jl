@@ -380,50 +380,74 @@ end
 end
 
 @testset "symbol replacement" begin
-    expr = @macroexpand @checked foldl(+, [])
-    @test expr.args[2] == :(OverflowContexts.checked_add)
-
-    expr = @macroexpand @unchecked foldl(+, [])
-    @test expr.args[2] == :(OverflowContexts.unchecked_add)
-
-    expr = @macroexpand @saturating foldl(+, [])
-    @test expr.args[2] == :(OverflowContexts.saturating_add)
-
     expr = @macroexpand @checked foldl(-, [])
     @test expr.args[2] == :(OverflowContexts.checked_negsub)
-
-    expr = @macroexpand @unchecked foldl(-, [])
-    @test expr.args[2] == :(OverflowContexts.unchecked_negsub)
-    
-    expr = @macroexpand @saturating foldl(-, [])
-    @test expr.args[2] == :(OverflowContexts.saturating_negsub)
-
+    expr = @macroexpand @checked foldl(+, [])
+    @test expr.args[2] == :(OverflowContexts.checked_add)
     expr = @macroexpand @checked foldl(*, [])
     @test expr.args[2] == :(OverflowContexts.checked_mul)
-
-    expr = @macroexpand @unchecked foldl(*, [])
-    @test expr.args[2] == :(OverflowContexts.unchecked_mul)
-
-    expr = @macroexpand @saturating foldl(*, [])
-    @test expr.args[2] == :(OverflowContexts.saturating_mul)
-
     expr = @macroexpand @checked foldl(^, [])
     @test expr.args[2] == :(OverflowContexts.checked_pow)
-
+    expr = @macroexpand @checked foldl(÷, [])
+    @test expr.args[2] == :(OverflowContexts.checked_div)
+    expr = @macroexpand @checked foldl(div, [])
+    @test expr.args[2] == :(OverflowContexts.checked_div)
+    expr = @macroexpand @checked foldl(fld, [])
+    @test expr.args[2] == :(OverflowContexts.checked_fld)
+    expr = @macroexpand @checked foldl(cld, [])
+    @test expr.args[2] == :(OverflowContexts.checked_cld)
+    expr = @macroexpand @checked foldl(%, [])
+    @test expr.args[2] == :(OverflowContexts.checked_rem)
+    expr = @macroexpand @checked foldl(rem, [])
+    @test expr.args[2] == :(OverflowContexts.checked_rem)
+    expr = @macroexpand @checked foldl(mod, [])
+    @test expr.args[2] == :(OverflowContexts.checked_mod)
+    
+    expr = @macroexpand @unchecked foldl(-, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_negsub)
+    expr = @macroexpand @unchecked foldl(+, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_add)
+    expr = @macroexpand @unchecked foldl(*, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_mul)
     expr = @macroexpand @unchecked foldl(^, [])
     @test expr.args[2] == :(OverflowContexts.unchecked_pow)
+    expr = @macroexpand @unchecked foldl(÷, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_div)
+    expr = @macroexpand @unchecked foldl(div, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_div)
+    expr = @macroexpand @unchecked foldl(fld, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_fld)
+    expr = @macroexpand @unchecked foldl(cld, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_cld)
+    expr = @macroexpand @unchecked foldl(%, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_rem)
+    expr = @macroexpand @unchecked foldl(rem, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_rem)
+    expr = @macroexpand @unchecked foldl(mod, [])
+    @test expr.args[2] == :(OverflowContexts.unchecked_mod)
 
+    expr = @macroexpand @saturating foldl(-, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_negsub)
+    expr = @macroexpand @saturating foldl(+, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_add)
+    expr = @macroexpand @saturating foldl(*, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_mul)
     expr = @macroexpand @saturating foldl(^, [])
     @test expr.args[2] == :(OverflowContexts.saturating_pow)
-
-    expr = @macroexpand @checked foldl(:abs, [])
-    @test expr.args[2] == :(OverflowContexts.checked_abs)
-
-    expr = @macroexpand @unchecked foldl(:abs, [])
-    @test expr.args[2] == :(OverflowContexts.unchecked_abs)
-
-    expr = @macroexpand @saturating foldl(:abs, [])
-    @test expr.args[2] == :(OverflowContexts.saturating_abs)
+    expr = @macroexpand @saturating foldl(÷, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_div)
+    expr = @macroexpand @saturating foldl(div, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_div)
+    expr = @macroexpand @saturating foldl(fld, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_fld)
+    expr = @macroexpand @saturating foldl(cld, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_cld)
+    expr = @macroexpand @saturating foldl(%, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_rem)
+    expr = @macroexpand @saturating foldl(rem, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_rem)
+    expr = @macroexpand @saturating foldl(mod, [])
+    @test expr.args[2] == :(OverflowContexts.saturating_mod)
 end
 
 @testset "negsub helper methods dispatch correctly" begin
