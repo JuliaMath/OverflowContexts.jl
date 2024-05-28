@@ -540,53 +540,74 @@ end
 
 @testset "Broadcasted operators replaced" begin
     aa = fill(typemax(Int), 2)
-    bb = fill(2, 2)
     cc = fill(typemin(Int), 2)
 
     @checked(.+cc) == cc
     @test_throws OverflowError @checked(.-cc)
-    @test_throws OverflowError @checked aa .+ bb
-    @test_throws OverflowError @checked cc .- bb
-    @test_throws OverflowError @checked aa .* bb
-    @test_throws OverflowError @checked aa .^ bb
+    @test_throws OverflowError @checked aa .+ 2
+    @test_throws OverflowError @checked cc .- 2
+    @test_throws OverflowError @checked aa .* 2
+    @test_throws OverflowError @checked aa .^ 2
     @test_throws OverflowError @checked abs.(cc)
+    @test_throws DivideError @checked aa .÷ 0
+    @test_throws DivideError @checked div.(aa, 0)
+    @test_throws DivideError @checked fld.(aa, 0)
+    @test_throws DivideError @checked cld.(aa, 0)
+    @test_throws DivideError @checked aa .% 0
+    @test_throws DivideError @checked rem.(aa, 0)
+    @test_throws DivideError @checked mod.(aa, 0)
 
     @unchecked(.+cc) == cc
     @unchecked(.-cc) == cc
-    @unchecked(aa .+ bb) == fill(typemin(Int) + 1, 2)
-    @unchecked(cc .- bb) == fill(typemax(Int) - 1, 2)
-    @unchecked(aa .* bb) == fill(-2, 2)
-    @unchecked(aa .^ bb) == fill(1, 2)
+    @unchecked(aa .+ 2) == fill(typemin(Int) + 1, 2)
+    @unchecked(cc .- 2) == fill(typemax(Int) - 1, 2)
+    @unchecked(aa .* 2) == fill(-2, 2)
+    @unchecked(aa .^ 2) == fill(1, 2)
     @unchecked(abs.(cc)) == cc
+    @unchecked(aa .÷ 0) == fill(0, 2)
+    @unchecked(div.(aa, 0)) == fill(0, 2)
+    @unchecked(fld.(aa, 0)) == fill(0, 2)
+    @unchecked(cld.(aa, 0)) == fill(0, 2)
+    @unchecked(aa .% 0) == fill(0, 2)
+    @unchecked(rem.(aa, 0)) == fill(0, 2)
+    @unchecked(mod.(aa, 0)) == fill(0, 2)
 
     @saturating(.+cc) == cc
     @saturating(.-cc) == aa
-    @saturating(aa .+ bb) == aa
-    @saturating(cc .- bb) == cc
-    @saturating(aa .* bb) == aa
-    @saturating(aa .^ bb) == aa
+    @saturating(aa .+ 2) == aa
+    @saturating(cc .- 2) == cc
+    @saturating(aa .* 2) == aa
+    @saturating(aa .^ 2) == aa
     @saturating(abs.(cc)) == aa
+    @saturating(aa .÷ 0) == aa
+    @saturating(div.(aa, 0)) == aa
+    @saturating(fld.(aa, 0)) == aa
+    @saturating(cld.(aa, 0)) == aa
+    @saturating(aa .% 0) == fill(0, 2)
+    @saturating(rem.(aa, 0)) == fill(0, 2)
+    @saturating(mod.(aa, 0)) == fill(0, 2)
 end
 
 @testset "Broadcasted assignment operators replaced" begin
     aa = fill(typemax(Int), 2)
-    bb = fill(2, 2)
     cc = fill(typemin(Int), 2)
     
-    @test_throws OverflowError @checked aa .+ bb
-    @test_throws OverflowError @checked aa .^ bb
-    @test_throws OverflowError @checked cc .- bb
-    @test_throws OverflowError @checked aa .* bb
+    @test_throws OverflowError @checked aa .+= 2
+    @test_throws OverflowError @checked aa .^= 2
+    @test_throws OverflowError @checked cc .-= 2
+    @test_throws OverflowError @checked aa .*= 2
+    @test_throws DivideError @checked aa .÷= 0
 
-    @unchecked(copy(aa) .+= bb) == fill(typemin(Int) + 1, 2)
-    @unchecked(copy(cc) .-= bb) == fill(typemax(Int) - 1, 2)
-    @unchecked(copy(aa) .* bb) == fill(-2, 2)
-    @unchecked(copy(aa) .^ bb) == fill(1, 2)
+    @unchecked(copy(aa) .+= 2) == fill(typemin(Int) + 1, 2)
+    @unchecked(copy(cc) .-= 2) == fill(typemax(Int) - 1, 2)
+    @unchecked(copy(aa) .*= 2) == fill(-2, 2)
+    @unchecked(copy(aa) .^= 2) == fill(1, 2)
+    @unchecked(copy(aa) .÷= 0) == fill(1, 2)
 
-    @saturating(copy(aa) .+= bb) == aa
-    @saturating(copy(cc) .-= bb) == cc
-    @saturating(copy(aa) .* bb) == aa
-    @saturating(copy(aa) .^ bb) == aa
+    @saturating(copy(aa) .+= 2) == aa
+    @saturating(copy(cc) .-= 2) == cc
+    @saturating(copy(aa) .*= 2) == aa
+    @saturating(copy(aa) .^= 2) == aa
 end
 
 @testset "Elementwise array methods are replaced, and others throw" begin
