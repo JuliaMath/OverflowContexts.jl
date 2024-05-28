@@ -2,6 +2,81 @@ using Base.Meta: isexpr
 
 const op_method_symbols = (:+, :-, :*, :^, :abs, :÷, :div, :cld, :fld, :%, :rem, :mod)
 
+const op_checked = Dict(
+    Symbol("unary-") => :(OverflowContexts.checked_neg),
+    Symbol("ambig-") => :(OverflowContexts.checked_negsub),
+    :+ => :(OverflowContexts.checked_add),
+    :- => :(OverflowContexts.checked_sub),
+    :* => :(OverflowContexts.checked_mul),
+    :^ => :(OverflowContexts.checked_pow),
+    :abs => :(OverflowContexts.checked_abs),
+    :÷ => :(OverflowContexts.checked_div),
+    :div => :(OverflowContexts.checked_div),
+    :fld => :(OverflowContexts.checked_fld),
+    :cld => :(OverflowContexts.checked_cld),
+    :% => :(OverflowContexts.checked_rem),
+    :rem => :(OverflowContexts.checked_rem),
+    :mod => :(OverflowContexts.checked_mod)
+)
+
+const op_unchecked = Dict(
+    Symbol("unary-") => :(OverflowContexts.unchecked_neg),
+    Symbol("ambig-") => :(OverflowContexts.unchecked_negsub),
+    :+ => :(OverflowContexts.unchecked_add),
+    :- => :(OverflowContexts.unchecked_sub),
+    :* => :(OverflowContexts.unchecked_mul),
+    :^ => :(OverflowContexts.unchecked_pow),
+    :abs => :(OverflowContexts.unchecked_abs),
+    :÷ => :(OverflowContexts.unchecked_div),
+    :div => :(OverflowContexts.unchecked_div),
+    :fld => :(OverflowContexts.unchecked_fld),
+    :cld => :(OverflowContexts.unchecked_cld),
+    :% => :(OverflowContexts.unchecked_rem),
+    :rem => :(OverflowContexts.unchecked_rem),
+    :mod => :(OverflowContexts.unchecked_mod)
+)
+
+const op_saturating = Dict(
+    Symbol("unary-") => :(OverflowContexts.saturating_neg),
+    Symbol("ambig-") => :(OverflowContexts.saturating_negsub),
+    :+ => :(OverflowContexts.saturating_add),
+    :- => :(OverflowContexts.saturating_sub),
+    :* => :(OverflowContexts.saturating_mul),
+    :^ => :(OverflowContexts.saturating_pow),
+    :abs => :(OverflowContexts.saturating_abs),
+    :÷ => :(OverflowContexts.saturating_div),
+    :div => :(OverflowContexts.saturating_div),
+    :fld => :(OverflowContexts.saturating_fld),
+    :cld => :(OverflowContexts.saturating_cld),
+    :% => :(OverflowContexts.saturating_rem),
+    :rem => :(OverflowContexts.saturating_rem),
+    :mod => :(OverflowContexts.saturating_mod)
+)
+
+const broadcast_op_map = Dict(
+    :.+ => :+,
+    :.- => :-,
+    :.* => :*,
+    :.^ => :^,
+    :.÷ => :÷,
+    :.% => :%
+)
+
+const assignment_op_map = Dict(
+    :+= => :+,
+    :-= => :-,
+    :*= => :*,
+    :^= => :^,
+    :÷= => :÷,
+    :%= => :%,
+    :.+= => :.+,
+    :.-= => :.-,
+    :.*= => :.*,
+    :.^= => :.^,
+    :.÷= => :.÷,
+    :.%= => :.%
+)
+
 """
     @default_checked
 
@@ -127,89 +202,6 @@ macro saturating(expr)
     expr = copy(expr)
     return esc(replace_op!(expr, op_saturating))
 end
-
-const op_checked = Dict(
-    Symbol("unary-") => :(OverflowContexts.checked_neg),
-    Symbol("ambig-") => :(OverflowContexts.checked_negsub),
-    :+ => :(OverflowContexts.checked_add),
-    :- => :(OverflowContexts.checked_sub),
-    :* => :(OverflowContexts.checked_mul),
-    :^ => :(OverflowContexts.checked_pow),
-    :abs => :(OverflowContexts.checked_abs),
-    :÷ => :(OverflowContexts.checked_div),
-    :div => :(OverflowContexts.checked_div),
-    :fld => :(OverflowContexts.checked_fld),
-    :cld => :(OverflowContexts.checked_cld),
-    :% => :(OverflowContexts.checked_rem),
-    :rem => :(OverflowContexts.checked_rem),
-    :mod => :(OverflowContexts.checked_mod)
-)
-
-const op_unchecked = Dict(
-    Symbol("unary-") => :(OverflowContexts.unchecked_neg),
-    Symbol("ambig-") => :(OverflowContexts.unchecked_negsub),
-    :+ => :(OverflowContexts.unchecked_add),
-    :- => :(OverflowContexts.unchecked_sub),
-    :* => :(OverflowContexts.unchecked_mul),
-    :^ => :(OverflowContexts.unchecked_pow),
-    :abs => :(OverflowContexts.unchecked_abs),
-    :÷ => :(OverflowContexts.unchecked_div),
-    :div => :(OverflowContexts.unchecked_div),
-    :fld => :(OverflowContexts.unchecked_fld),
-    :cld => :(OverflowContexts.unchecked_cld),
-    :% => :(OverflowContexts.unchecked_rem),
-    :rem => :(OverflowContexts.unchecked_rem),
-    :mod => :(OverflowContexts.unchecked_mod)
-)
-
-const op_saturating = Dict(
-    Symbol("unary-") => :(OverflowContexts.saturating_neg),
-    Symbol("ambig-") => :(OverflowContexts.saturating_negsub),
-    :+ => :(OverflowContexts.saturating_add),
-    :- => :(OverflowContexts.saturating_sub),
-    :* => :(OverflowContexts.saturating_mul),
-    :^ => :(OverflowContexts.saturating_pow),
-    :abs => :(OverflowContexts.saturating_abs),
-    :÷ => :(OverflowContexts.saturating_div),
-    :div => :(OverflowContexts.saturating_div),
-    :fld => :(OverflowContexts.saturating_fld),
-    :cld => :(OverflowContexts.saturating_cld),
-    :% => :(OverflowContexts.saturating_rem),
-    :rem => :(OverflowContexts.saturating_rem),
-    :mod => :(OverflowContexts.saturating_mod)
-)
-
-const broadcast_op_map = Dict(
-    :.+ => :+,
-    :.- => :-,
-    :.* => :*,
-    :.^ => :^,
-    :.÷ => :÷,
-    :.% => :%
-)
-
-const assignment_op_map = Dict(
-    :+= => :+,
-    :-= => :-,
-    :*= => :*,
-    :^= => :^,
-    :÷= => :÷,
-    :%= => :%,
-    :.+= => :.+,
-    :.-= => :.-,
-    :.*= => :.*,
-    :.^= => :.^,
-    :.÷= => :.÷,
-    :.%= => :.%
-)
-
-# resolve ambiguity when `-` used as symbol
-unchecked_negsub(x) = unchecked_neg(x)
-unchecked_negsub(x, y) = unchecked_sub(x, y)
-checked_negsub(x) = checked_neg(x)
-checked_negsub(x, y) = checked_sub(x, y)
-saturating_negsub(x) = saturating_neg(x)
-saturating_negsub(x, y) = saturating_sub(x, y)
 
 # copied from CheckedArithmetic.jl and modified it
 function replace_op!(expr::Expr, op_map::Dict)

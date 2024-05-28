@@ -5,6 +5,43 @@ if VERSION ≤ v"1.11-alpha"
     import Base: power_by_squaring
 end
 
+# resolve ambiguity when `-` used as symbol
+saturating_negsub(x) = saturating_neg(x)
+saturating_negsub(x, y) = saturating_sub(x, y)
+
+# convert multi-argument calls into nested two-argument calls
+saturating_add(a, b, c, xs...) = @saturating (@_inline_meta; afoldl(+, (+)((+)(a, b), c), xs...))
+saturating_sub(a, b, c, xs...) = @saturating (@_inline_meta; afoldl(-, (-)((-)(a, b), c), xs...))
+saturating_mul(a, b, c, xs...) = @saturating (@_inline_meta; afoldl(*, (*)((*)(a, b), c), xs...))
+
+# promote unmatched number types to same type
+saturating_add(x::Number, y::Number) = saturating_add(promote(x, y)...)
+saturating_sub(x::Number, y::Number) = saturating_sub(promote(x, y)...)
+saturating_mul(x::Number, y::Number) = saturating_mul(promote(x, y)...)
+saturating_pow(x::Number, y::Number) = saturating_pow(promote(x, y)...)
+
+saturating_div(x::Number, y::Number) = saturating_div(promote(x, y)...)
+saturating_fld(x::Number, y::Number) = saturating_fld(promote(x, y)...)
+saturating_cld(x::Number, y::Number) = saturating_cld(promote(x, y)...)
+saturating_rem(x::Number, y::Number) = saturating_rem(promote(x, y)...)
+saturating_mod(x::Number, y::Number) = saturating_mod(promote(x, y)...)
+saturating_divrem(x::Number, y::Number) = saturating_divrem(promote(x, y)...)
+
+# fallback to `unchecked_` for `Number` types that don't have more specific `checked_` methods
+saturating_neg(x::T) where T <: Number = unchecked_neg(x)
+saturating_add(x::T, y::T) where T <: Number = unchecked_add(x, y)
+saturating_sub(x::T, y::T) where T <: Number = unchecked_sub(x, y)
+saturating_mul(x::T, y::T) where T <: Number = unchecked_mul(x, y)
+saturating_pow(x::T, y::T) where T <: Number = unchecked_pow(x, y)
+saturating_abs(x::T) where T <: Number = unchecked_abs(x)
+
+saturating_div(x::T, y::T) where T <: Number = saturating_div(x, y)
+saturating_fld(x::T, y::T) where T <: Number = saturating_fld(x, y)
+saturating_cld(x::T, y::T) where T <: Number = saturating_cld(x, y)
+saturating_rem(x::T, y::T) where T <: Number = saturating_rem(x, y)
+saturating_mod(x::T, y::T) where T <: Number = saturating_mod(x, y)
+saturating_divrem(x::T, y::T) where T <: Number = saturating_divrem(x, y)
+
 # saturating implementations
 saturating_neg(x::T) where T <: BitInteger = saturating_sub(zero(T), x)
 
