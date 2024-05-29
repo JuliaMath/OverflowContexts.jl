@@ -5,9 +5,9 @@ const UnsignedBitInteger = Union{UInt8, UInt16, UInt32, UInt64, UInt128}
 
 using Base: BitInteger, promote, afoldl, @_inline_meta
 import Base: literal_pow
+using Base.Checked: mul_with_overflow
 import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs,
     checked_div, checked_fld, checked_cld, checked_mod, checked_rem
-using Base.Checked: mul_with_overflow
 
 if VERSION ≥ v"1.11-alpha"
     import Base: power_by_squaring
