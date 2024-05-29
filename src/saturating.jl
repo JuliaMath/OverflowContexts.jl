@@ -1,10 +1,3 @@
-import Base: BitInteger
-import Base.Checked: mul_with_overflow
-
-if VERSION ≥ v"1.11-alpha"
-    using Base: power_by_squaring
-end
-
 # resolve ambiguity when `-` used as symbol
 saturating_negsub(x) = saturating_neg(x)
 saturating_negsub(x, y) = saturating_sub(x, y)
@@ -156,3 +149,19 @@ function saturating_mod(x::T, y::T) where T <: SignedBitInteger
 end
 
 saturating_mod(x::T, y::T) where T <: UnsignedBitInteger = @saturating rem(x, y)
+
+# adapted from Base intfuncs.jl; negative literal powers promote to floating point
+@inline literal_pow(::typeof(saturating_pow), x::BitInteger, ::Val{0}) = one(x)
+@inline literal_pow(::typeof(saturating_pow), x::BitInteger, ::Val{1}) = x
+@inline literal_pow(::typeof(saturating_pow), x::BitInteger, ::Val{2}) = @saturating x * x
+@inline literal_pow(::typeof(saturating_pow), x::BitInteger, ::Val{3}) = @saturating x * x * x
+@inline literal_pow(::typeof(saturating_pow), x::BitInteger, ::Val{-1}) = literal_pow(^, x, Val(-1))
+@inline literal_pow(::typeof(saturating_pow), x::BitInteger, ::Val{-2}) = literal_pow(^, x, Val(-2))
+
+@inline function literal_pow(f::typeof(saturating_pow), x, ::Val{p}) where {p}
+    if p < 0
+        literal_pow(^, x, Val(p))
+    else
+        f(x, p)
+    end
+end

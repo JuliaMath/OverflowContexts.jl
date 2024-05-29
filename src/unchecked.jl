@@ -67,3 +67,6 @@ unchecked_rem(x::T, y::T) where T <: UnsignedBitInteger =
 
 unchecked_mod(x::T, y::T) where T <: SignedBitInteger = x - unchecked_fld(x, y) * y
 unchecked_mod(x::T, y::T) where T <: UnsignedBitInteger = unchecked_rem(x, y)
+
+# adapted from Base intfuncs.jl; negative literal powers promote to floating point
+@inline literal_pow(::typeof(unchecked_pow), x, ::Val{p}) where {p} = literal_pow(^, x, Val(p))

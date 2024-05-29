@@ -235,12 +235,18 @@ function replace_op!(expr::Expr, op_map::Dict)
                     Expr(:tuple, expr.args[2:end]...)]
             end
         else                                      # arbitrary call
+            op_orig = op
             op = get(op_map, op, op)
             if isexpr(f, :.)
                 f.args[2] = QuoteNode(op)
                 expr.args[1] = f
             else
                 expr.args[1] = op
+                if op_orig == :^ && expr.args[3] isa Integer
+                    # literal_pow transformation
+                    pushfirst!(expr.args, :(Base.literal_pow))
+                    expr.args[4] = :(Val($(expr.args[4])))
+                end
             end
         end
         for i in 2:length(expr.args)
