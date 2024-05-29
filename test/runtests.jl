@@ -792,3 +792,9 @@ end
     @test_throws ErrorException @saturating aa * bb'
     @test_throws ErrorException @saturating dd ^ 2
 end
+
+@testset "literal_pow transformation" begin
+    expr = @macroexpand @checked 5 ^ 2
+    @test expr.args[1] == :(Base.literal_pow)
+    @test expr.args[2] == :(OverflowContexts.checked_pow)
+end

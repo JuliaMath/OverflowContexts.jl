@@ -1,16 +1,3 @@
-using Base: BitInteger, promote, afoldl, @_inline_meta
-import Base.Checked: checked_neg, checked_add, checked_sub, checked_mul, checked_abs,
-    checked_div, checked_fld, checked_cld, checked_mod, checked_rem
-using Base.Checked: mul_with_overflow
-
-if VERSION ≥ v"1.11-alpha"
-    import Base: power_by_squaring
-    import Base.Checked: checked_pow
-else
-    using Base: throw_domerr_powbysq, to_power_type
-    using Base.Checked: throw_overflowerr_binaryop
-end
-
 # resolve ambiguity when `-` used as symbol
 checked_negsub(x) = checked_neg(x)
 checked_negsub(x, y) = checked_sub(x, y)
@@ -86,4 +73,20 @@ if VERSION < v"1.11"
         end
         return y
     end    
+end
+
+# adapted from Base intfuncs.jl; negative literal powers promote to floating point
+@inline literal_pow(::typeof(checked_pow), x::BitInteger, ::Val{0}) = one(x)
+@inline literal_pow(::typeof(checked_pow), x::BitInteger, ::Val{1}) = x
+@inline literal_pow(::typeof(checked_pow), x::BitInteger, ::Val{2}) = @checked x * x
+@inline literal_pow(::typeof(checked_pow), x::BitInteger, ::Val{3}) = @checked x * x * x
+@inline literal_pow(::typeof(checked_pow), x::BitInteger, ::Val{-1}) = literal_pow(^, x, Val(-1))
+@inline literal_pow(::typeof(checked_pow), x::BitInteger, ::Val{-2}) = literal_pow(^, x, Val(-2))
+
+@inline function literal_pow(f::typeof(checked_pow), x, ::Val{p}) where {p}
+    if p < 0
+        literal_pow(^, x, Val(p))
+    else
+        f(x, p)
+    end
 end
