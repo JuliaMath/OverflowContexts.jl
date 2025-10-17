@@ -85,7 +85,7 @@ Redirect default integer math to overflow-checked operators for the current modu
 macro default_checked()
     quote
         if !isdefined(@__MODULE__, :__OverflowContextDefaultSet)
-            any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
+            VERSION < v"1.12" && any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
                 error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
         else
             @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
@@ -116,7 +116,7 @@ Restore default integer math to overflow-permissive operators for the current mo
 macro default_unchecked()
     quote
         if !isdefined(@__MODULE__, :__OverflowContextDefaultSet)
-            any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
+            VERSION < v"1.12" && any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
                 error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
         else
             @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
@@ -147,7 +147,7 @@ Redirect default integer math to saturating operators for the current module. On
 macro default_saturating()
     quote
         if !isdefined(@__MODULE__, :__OverflowContextDefaultSet)
-            any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
+            VERSION < v"1.12" && any(Base.isbindingresolved.(Ref(@__MODULE__), op_method_symbols)) &&
                 error("A default context may only be set before any reference to the affected methods (+, -, *, ^, abs) in the target module.")
         else
             @warn "A previous default was set for this module. Previously defined methods in this module will be recompiled with this new default."
