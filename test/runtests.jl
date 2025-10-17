@@ -592,6 +592,7 @@ end
     SaturatingModule.NestedUncheckedModule.testfunc()
 end
 
+if VERSION < v"1.12" # No longer necessary on 1.12+
 @testset "default methods error if Base symbol already resolved" begin
     x = 1 + 1
     @test_throws ErrorException @default_checked
@@ -618,6 +619,7 @@ end
             x = 1 + 1
             @test_throws ErrorException @default_saturating
         end))
+end
 end
 
 @testset "default methods warn if default is changed" begin    
