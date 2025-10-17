@@ -69,7 +69,7 @@ This package also adds a saturating mode, where values accumulate at the maximum
 # Evaluates to `typemax(Int64)`
 
 @saturating abs(typemin(Int64))
-# Expands to `OverflowContexts.checked_abs(typemin(Int64))`
+# Expands to `OverflowContexts.saturating_abs(typemin(Int64))`
 # Evaluates to `typemax(Int64)`
 ```
 
